@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Resolve all relative resource paths from New_Covenant/ -->
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FlockShow">
+  <meta name="theme-color" content="#ef4444">
+  <meta name="description" content="FlockShow — Church presentation and worship display for FlockOS.">
+
+  <!-- Flash prevention: apply saved FlockOS theme before first paint -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('flock_theme') || 'america';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'america');
+      }
+    })();
+  </script>
+
+  <title>FlockShow</title>
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="app.flockshow/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="Images/icon-show.svg">
+  <link rel="apple-touch-icon" href="Images/icon-show.svg">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Firebase preconnect -->
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+
+  <!-- Shared stylesheet -->
+  <link rel="stylesheet" href="Styles/new_covenant.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── FlockShow design tokens — cream page edges, NAVY panels w/ white/gold text ──
+       Note: virtually every FlockShow surface (topbar, library, editor, modals)
+       is rendered inside a navy panel, so --fs-ink and --fs-muted are panel-level
+       (white-ish) tokens. --fs-bg is the cream page background showing at edges. */
+    :root {
+      /* Surfaces — page edges cream, panels/cards navy gradient */
+      --fs-bg:        var(--bg, #f5f0e4);                                    /* page edges = cream */
+      --fs-panel:     linear-gradient(135deg, #0f1735 0%, #1b264f 100%);     /* navy gradient panels */
+      --fs-panel-alt: linear-gradient(135deg, #14204a 0%, #243068 100%);     /* slightly lighter navy */
+      --fs-border:    rgba(255,255,255,0.10);                                /* subtle border on navy */
+
+      /* Ink — panels are navy so default text is white */
+      --fs-ink:       #ffffff;                                               /* white on navy panels */
+      --fs-muted:     rgba(255,255,255,0.65);                                /* dimmed white on panels */
+
+      /* Accents — gold brand for FlockShow */
+      --fs-accent:    #e8a838;
+      --fs-accent-dk: #c48a20;
+      --fs-accent-dim:rgba(232,168,56,0.13);
+      --fs-danger:    #ef4444;
+
+      /* FlockShow-specific overrides (not NC core tokens) */
+      --fs-bg-overlay: rgba(255,255,255,0.05);
+      --fs-bg-hover:   rgba(255,255,255,0.10);
+      --fs-bg-input:   #151827;
+      --fs-modal-dim:  rgba(0,0,0,0.75);
+      --fs-top-bg:     #151827;
+      --fs-top-line:   rgba(255,255,255,0.1);
+      --fs-top-ink:    #ffffff;
+
+      --topbar-h:     54px;
+      --safe-top:     env(safe-area-inset-top, 0px);
+      --safe-bot:     env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body {
+      height: 100dvh; margin: 0; padding: 0;
+      color: var(--fs-ink);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    html { background: var(--fs-bg); }
+    body { background: var(--fs-bg); }
+
+    /* ── Root grid ─────────────────────────────────────────────────────── */
+    #fs-root {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Subbar (Library/Editor tabs + Present) */
+    #fs-subbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 18px;
+      background: var(--fs-top-bg);
+      border-bottom: 1px solid var(--fs-top-line);
+      color: var(--fs-top-ink);
+      z-index: 199;
+    }
+
+    /* ── Topbar — canonical FlockOS dark navy chrome ─────────────────── */
+    /* (Topbar styling now handled by .unity-header in new_covenant.css.) */
+    /* Hide hamburger — FlockShow has no sidebar */
+    .unity-hamburger { display: none !important; }
+
+    .fs-tab-bar { display: flex; gap: 2px; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 3px; }
+    .fs-tab {
+      padding: 5px 14px; border-radius: 6px; font: 500 0.80rem 'Plus Jakarta Sans', sans-serif;
+      color: var(--fs-muted); cursor: pointer; border: none; background: none;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .fs-tab:hover:not(:disabled) { color: var(--fs-ink); background: rgba(255,255,255,0.06); }
+    .fs-tab.fs-tab--active { background: var(--fs-accent-dim); color: var(--fs-accent); }
+    .fs-tab:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .fs-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    .fs-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border-radius: 8px; font: 600 0.78rem 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .fs-btn--primary { background: var(--fs-accent); color: #0c0a00; }
+    .fs-btn--primary:hover { background: #f0b84a; }
+    .fs-btn--ghost { background: rgba(255,255,255,0.07); color: var(--fs-ink); }
+    .fs-btn--ghost:hover { background: rgba(255,255,255,0.12); }
+    .fs-btn--danger { background: rgba(248,113,113,0.15); color: var(--fs-danger); }
+    .fs-btn--danger:hover { background: rgba(248,113,113,0.25); }
+    .fs-btn:disabled { opacity: 0.35; pointer-events: none; }
+    .fs-btn--sm { padding: 4px 10px; font-size: 0.73rem; }
+
+    /* ── Auth overlay ───────────────────────────────────────────────── */
+    #fs-auth-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--fs-bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fs-auth-card {
+      background: var(--fs-panel); border: 1px solid var(--fs-border);
+      border-radius: 20px; padding: 40px 36px; max-width: 380px; width: 90%;
+      text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.65);
+    }
+    .fs-auth-icon {
+      width: 72px; height: 72px; border-radius: 18px; object-fit: contain;
+      box-shadow: 0 8px 28px rgba(232,168,56,0.35);
+    }
+    .fs-auth-card h1 {
+      font: 700 1.4rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); margin: 0;
+    }
+    .fs-auth-card p {
+      font: 0.85rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); margin: 0; line-height: 1.55;
+    }
+    .fs-auth-card .fs-auth-verse {
+      font: italic 0.73rem 'Plus Jakarta Sans', sans-serif;
+      color: var(--ink-faint); margin-top: 10px;
+    }
+    /* ── User chip in topbar ────────────────────────────────────────── */
+    .fs-user-chip {
+      display: flex; align-items: center; gap: 6px;
+      font: 500 0.76rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--fs-border);
+      border-radius: 999px; padding: 3px 10px 3px 7px; cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .fs-user-chip:hover { background: rgba(255,255,255,0.09); color: var(--fs-ink); }
+    .fs-user-avatar {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--fs-accent-dim);
+      border: 1px solid var(--fs-border); display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--fs-accent); font-weight: 600; flex-shrink: 0;
+    }
+
+    .fs-live-badge {
+      display: flex; align-items: center; gap: 5px;
+      font: 600 0.70rem 'Plus Jakarta Sans', sans-serif; color: #4ade80;
+      background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.22);
+      border-radius: 999px; padding: 3px 10px; flex-shrink: 0;
+    }
+    .fs-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: fs-pulse 1.5s ease-in-out infinite; }
+    @keyframes fs-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    /* ── Library view ──────────────────────────────────────────────────── */
+    #fs-library {
+      overflow-y: auto; padding: 28px 32px 80px;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .fs-lib-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .fs-lib-title { font: 700 1.25rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); flex: 1; }
+    .fs-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 300px; }
+    .fs-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--fs-muted); pointer-events: none; }
+    .fs-search {
+      width: 100%; padding: 8px 14px 8px 34px;
+      background: var(--fs-panel); border: 1px solid var(--fs-border); border-radius: 10px;
+      font: 0.83rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); outline: none;
+    }
+    .fs-search::placeholder { color: var(--fs-muted); }
+    .fs-search:focus { border-color: var(--fs-accent); }
+
+    .fs-shows-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .fs-show-card {
+      background: var(--fs-panel); border: 1px solid var(--fs-border); border-radius: 14px;
+      padding: 18px 18px 14px; cursor: pointer; transition: all 0.15s;
+      display: flex; flex-direction: column; gap: 7px; position: relative; overflow: hidden;
+    }
+    .fs-show-card:hover { border-color: rgba(232,168,56,0.4); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,168,56,0.15); }
+    .fs-show-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2.5px;
+      background: linear-gradient(90deg, var(--fs-accent), var(--fs-accent-dk));
+      border-radius: 14px 14px 0 0; opacity: 0; transition: opacity 0.15s;
+    }
+    .fs-show-card:hover::before { opacity: 1; }
+    .fs-show-name { font: 700 0.92rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); line-height: 1.3; word-break: break-word; }
+    .fs-show-meta { font: 0.72rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); }
+    .fs-show-preview { display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
+    .fs-slide-pip { width: 26px; height: 17px; border-radius: 3px; flex-shrink: 0; }
+    .fs-show-actions { display: flex; gap: 4px; margin-top: 6px; }
+    .fs-show-action-btn {
+      padding: 3px 8px; border-radius: 6px; font: 500 0.70rem 'Plus Jakarta Sans', sans-serif;
+      border: none; cursor: pointer; transition: all 0.12s;
+    }
+    .fs-show-action-btn--edit { background: var(--fs-accent-dim); color: var(--fs-accent); }
+    .fs-show-action-btn--edit:hover { background: rgba(232,168,56,0.22); }
+    .fs-show-action-btn--dup { background: var(--fs-bg-overlay); color: var(--fs-muted); }
+    .fs-show-action-btn--dup:hover { background: var(--fs-bg-hover); color: var(--fs-ink); }
+    .fs-show-action-btn--del { background: rgba(248,113,113,0.08); color: var(--fs-danger); }
+    .fs-show-action-btn--del:hover { background: rgba(248,113,113,0.18); }
+
+    .fs-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 80px 20px; text-align: center; color: var(--fs-muted);
+      grid-column: 1 / -1;
+    }
+    .fs-empty-icon { font-size: 3rem; opacity: 0.4; }
+
+    /* ── First-run welcome — navy/gold "Vespers" themed ─────────────────── */
+    .fs-welcome {
+      grid-column: 1 / -1;
+      display: flex; flex-direction: column; gap: 18px;
+      max-width: 1080px; margin: 8px auto 24px;
+      padding: 0 4px;
+    }
+    /* Override .devo-dark-card defaults for a bigger hero feel */
+    .fs-welcome-hero.devo-dark-card {
+      padding: 36px 40px 32px;
+      border-radius: 20px;
+      box-shadow:
+        0 18px 48px rgba(15,23,53,0.22),
+        0 4px 14px rgba(15,23,53,0.10),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .fs-welcome-hero.devo-dark-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg,
+        rgba(232,168,56,0) 0%,
+        rgba(232,168,56,0.85) 30%,
+        rgba(255,255,255,0.95) 50%,
+        rgba(232,168,56,0.85) 70%,
+        rgba(232,168,56,0) 100%);
+    }
+    .fs-welcome-hero .word-title.devo-dark-title {
+      font-size: 1.85rem;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .fs-welcome-hero .word-tease.devo-dark-tease {
+      font-size: 1rem !important;
+      max-width: 760px;
+    }
+    .fs-welcome-hero .word-tease.devo-dark-tease strong {
+      color: var(--gold, #e8a838);
+      font-weight: 700;
+    }
+    .fs-welcome-cta {
+      align-self: flex-start;
+      margin-top: 8px;
+      padding: 11px 22px !important;
+      font-size: 0.92rem !important;
+      box-shadow: 0 6px 18px rgba(232,168,56,0.35);
+    }
+
+    /* Feature tiles — three small navy cards under the hero */
+    .fs-welcome-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .fs-welcome-feat {
+      background: linear-gradient(135deg, #0f1735 0%, #1b264f 100%);
+      border-radius: 14px;
+      padding: 20px 20px 18px;
+      color: #fff;
+      display: flex; flex-direction: column; gap: 8px;
+      box-shadow:
+        0 6px 20px rgba(15,23,53,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      border-top: 2px solid rgba(232,168,56,0.45);
+    }
+    .fs-welcome-feat-icon {
+      font-size: 1.45rem;
+      color: var(--gold, #e8a838);
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: rgba(232,168,56,0.16);
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .fs-welcome-feat-title {
+      font: 700 0.98rem 'Plus Jakarta Sans', sans-serif;
+      color: #fff;
+      letter-spacing: -0.005em;
+    }
+    .fs-welcome-feat-body {
+      font: 0.86rem/1.5 'Plus Jakarta Sans', sans-serif;
+      color: rgba(255,255,255,0.82);
+    }
+    @media (max-width: 820px) {
+      .fs-welcome-hero.devo-dark-card { padding: 26px 22px 22px; }
+      .fs-welcome-hero .word-title.devo-dark-title { font-size: 1.5rem; }
+      .fs-welcome-features { grid-template-columns: 1fr; }
+    }
+
+    /* ── Library banner (shows above grid when shows exist) ──────────────
+       Slim Vespers-themed strip so the encouragement copy stays in front
+       of pastors even after their library fills up. */
+    .fs-lib-banner {
+      grid-column: 1 / -1;
+      padding: 16px 22px;
+      border-radius: 14px;
+      margin: 0 0 10px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(15,23,53,0.18);
+    }
+    .fs-lib-banner::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #e8a838 18%, #fff 50%, #e8a838 82%, transparent);
+      opacity: 0.85;
+    }
+    .fs-lib-banner-body {
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    }
+    .fs-lib-banner-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font: 700 0.72rem 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(232,168,56,0.95);
+      flex-shrink: 0;
+    }
+    .fs-lib-banner-pill {
+      background: rgba(232,168,56,0.18);
+      color: #f3c773;
+      border: 1px solid rgba(232,168,56,0.45);
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 0.68rem; letter-spacing: 0.1em;
+    }
+    .fs-lib-banner-msg {
+      font: 500 0.92rem/1.4 'Plus Jakarta Sans', sans-serif;
+      color: rgba(255,255,255,0.92);
+      flex: 1; min-width: 240px;
+    }
+    @media (max-width: 620px) {
+      .fs-lib-banner { padding: 14px 16px; }
+      .fs-lib-banner-msg { font-size: 0.85rem; }
+    }
+
+    /* Slide thumbnail pips on each show card */
+    .fs-slide-pip {
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+    .fs-slide-pip-icon {
+      font-size: 0.5rem;
+      opacity: 0.55;
+      line-height: 1;
+    }
+    .fs-slide-pip--more {
+      background: rgba(15,23,53,0.06);
+      color: var(--fs-muted, #6b7280);
+      font-size: 0.46rem; font-weight: 600;
+    }
+
+    /* ── Editor view ───────────────────────────────────────────────────── */
+    #fs-editor { display: grid; grid-template-rows: 46px 1fr; overflow: hidden; }
+
+    .fs-editor-bar {
+      display: flex; align-items: center; gap: 8px; padding: 0 14px;
+      background: var(--fs-panel); border-bottom: 1px solid var(--fs-border); overflow: hidden;
+    }
+    .fs-show-title-input {
+      background: transparent; border: none; outline: none;
+      font: 700 0.90rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+      min-width: 100px; max-width: 220px; flex-shrink: 1;
+    }
+    .fs-show-title-input::placeholder { color: var(--fs-muted); }
+    .fs-show-info-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--fs-border);
+      color: var(--fs-muted);
+      font: 0.72rem 'Plus Jakarta Sans', sans-serif;
+      padding: 3px 4px;
+      outline: none;
+      transition: border-color .15s, color .15s;
+      margin-bottom: 4px;
+    }
+    .fs-show-info-input:focus { border-bottom-color: var(--fs-accent); color: var(--fs-ink); }
+    .fs-show-info-input::placeholder { color: var(--fs-muted); opacity: 0.45; }
+    .fs-slide-count { font: 0.72rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); flex-shrink: 0; }
+
+    .fs-editor-body { display: grid; grid-template-columns: 196px 1fr 260px; overflow: hidden; }
+
+    /* ── Slide list (left) ─────────────────────────────────────────────── */
+    #fs-slide-list {
+      background: var(--fs-panel-alt); flex: 1;
+      overflow-y: auto; padding: 6px 5px; display: flex; flex-direction: column; gap: 4px;
+      scrollbar-width: thin; scrollbar-color: rgba(232,168,56,0.25) transparent;
+    }
+    #fs-slide-list::-webkit-scrollbar { width: 3px; }
+    #fs-slide-list::-webkit-scrollbar-thumb { background: rgba(232,168,56,0.22); border-radius: 3px; }
+
+    .fs-slide-item {
+      border-radius: 8px; cursor: pointer; padding: 2px; transition: all 0.12s;
+      flex-shrink: 0; border: 2px solid transparent; user-select: none;
+    }
+    .fs-slide-item:hover { border-color: rgba(232,168,56,0.3); }
+    .fs-slide-item.fs-slide-item--active { border-color: var(--fs-accent); }
+
+    .fs-slide-thumb {
+      width: 100%; aspect-ratio: 16/9; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 6px; overflow: hidden; position: relative;
+    }
+    .fs-slide-thumb-text {
+      font-size: 0.48rem; text-align: center; line-height: 1.3;
+      white-space: pre-wrap; overflow: hidden; max-height: 100%;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-weight: 500;
+    }
+    .fs-slide-num { font: 500 0.63rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); padding: 2px 4px; }
+    .fs-type-chip {
+      position: absolute; top: 2px; right: 2px; font-size: 0.42rem;
+      background: rgba(0,0,0,0.45); border-radius: 3px; padding: 1px 3px; color: rgba(255,255,255,0.65);
+    }
+
+    /* Pinned add-slide header above the scrollable slide list */
+    #fs-slide-list-col {
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--fs-border);
+      overflow: hidden;
+    }
+    .fs-add-slide-wrap {
+      padding: 6px 5px; position: relative; flex-shrink: 0;
+      border-bottom: 1px solid var(--fs-border);
+      background: var(--fs-panel-alt);
+    }
+    .fs-add-slide-btn {
+      width: 100%; padding: 7px; border-radius: 8px;
+      font: 600 0.73rem 'Plus Jakarta Sans', sans-serif; background: rgba(232,168,56,0.07);
+      color: var(--fs-accent); border: 1px dashed rgba(232,168,56,0.30); cursor: pointer; transition: all 0.12s;
+    }
+    .fs-add-slide-btn:hover { background: rgba(232,168,56,0.14); }
+
+    .fs-add-type-menu {
+      position: absolute; top: calc(100% + 4px); left: 4px; right: 4px;
+      background: var(--fs-panel); border: 1px solid var(--fs-border); border-radius: 10px;
+      overflow: hidden; z-index: 300; box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+    }
+    .fs-add-type-item {
+      padding: 9px 13px; font: 0.80rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+      cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+    }
+    .fs-add-type-item:hover { background: var(--fs-accent-dim); }
+
+    /* ── Slide preview (center) ────────────────────────────────────────── */
+    #fs-slide-preview {
+      display: flex; flex-direction: column; background: var(--fs-bg); overflow: hidden;
+    }
+    .fs-preview-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .fs-slide-canvas {
+      aspect-ratio: 16/9; border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 20px 60px rgba(0,0,0,0.7);
+      padding: 5%; position: relative; overflow: hidden;
+      width: 100%; max-height: 100%;
+    }
+    .fs-canvas-text {
+      text-align: center; line-height: 1.48;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-weight: 500; letter-spacing: 0.01em;
+      white-space: pre-wrap; max-width: 100%; width: 100%; overflow-wrap: break-word;
+    }
+    .fs-canvas-ref {
+      margin-top: 1rem; font-size: 0.68em; opacity: 0.65; font-style: italic;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      letter-spacing: 0.02em; text-align: center; width: 100%;
+    }
+    .fs-canvas-label {
+      position: absolute; top: 7%; left: 6%;
+      font: 700 0.38rem 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: rgba(232,168,56,0.75); letter-spacing: .10em; text-transform: uppercase;
+      text-align: left; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .fs-preview-nav {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 10px; border-top: 1px solid var(--fs-border);
+    }
+    .fs-nav-btn {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--fs-bg-overlay);
+      border: none; color: var(--fs-ink); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s;
+    }
+    .fs-nav-btn:hover { background: var(--fs-bg-hover); }
+    .fs-nav-btn:disabled { opacity: 0.2; pointer-events: none; }
+    .fs-prev-counter { font: 0.75rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); min-width: 50px; text-align: center; }
+
+    /* ── Properties panel (right) ──────────────────────────────────────── */
+    #fs-slide-props {
+      background: var(--fs-bg); border-left: 1px solid rgba(0,0,0,0.08);
+      overflow-y: auto; padding: 10px 10px; display: flex; flex-direction: column; gap: 6px;
+      scrollbar-width: thin; scrollbar-color: rgba(232,168,56,0.25) transparent;
+    }
+
+    .fs-prop-section { display: flex; flex-direction: column; gap: 7px; }
+    .fs-prop-label { font: 600 0.68rem 'Plus Jakarta Sans', sans-serif; text-transform: uppercase; letter-spacing: .07em; color: var(--fs-muted); }
+    .fs-prop-divider { border: none; border-top: 1px solid var(--fs-border); margin: 0; }
+    .fs-prop-input {
+      width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.04);
+      border: 1px solid var(--fs-border); border-radius: 8px;
+      font: 0.80rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); outline: none; resize: vertical;
+    }
+    .fs-prop-input:focus { border-color: var(--fs-accent); background: rgba(232,168,56,0.05); }
+    .fs-prop-textarea { min-height: 90px; }
+
+    /* ── Inline format toolbar ── */
+    .fs-fmt-toolbar {
+      display: flex; align-items: center; gap: 3px; padding: 2px 0 3px;
+    }
+    .fs-fmt-btn {
+      width: 28px; height: 26px; border-radius: 6px; cursor: pointer;
+      background: var(--fs-bg-overlay); border: 1px solid var(--fs-border);
+      color: var(--fs-muted); font-size: 0.75rem; font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; flex-shrink: 0;
+    }
+    .fs-fmt-btn:hover { background: rgba(232,168,56,0.14); border-color: rgba(232,168,56,0.40); color: var(--fs-accent); }
+    .fs-fmt-hint {
+      font: 0.62rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted);
+      margin-left: 4px; opacity: 0.7;
+    }
+    .fs-fmt-sep { width: 1px; height: 16px; background: var(--fs-border); flex-shrink: 0; margin: 0 2px; }
+    .fs-align-btn {
+      flex: 1; height: 32px; border-radius: 7px;
+      border: 1px solid var(--fs-border); background: var(--fs-bg-overlay);
+      color: var(--fs-muted); cursor: pointer; transition: all 0.12s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fs-align-btn:hover { background: var(--fs-bg-hover); color: var(--fs-ink); }
+    .fs-align-btn--active { border-color: var(--fs-accent) !important; background: var(--fs-accent-dim) !important; color: var(--fs-accent) !important; }
+    .fs-align-row { display: flex; gap: 5px; }
+    .fs-position-row { display: flex; align-items: center; gap: 6px; }
+    .fs-pos-arrow {
+      flex-shrink: 0; width: 30px; height: 30px;
+      background: var(--fs-panel); border: 1px solid var(--fs-border);
+      border-radius: 6px; color: var(--fs-ink); font-size: 1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .fs-pos-arrow:hover:not(:disabled) { background: var(--fs-hover); border-color: var(--fs-accent); color: var(--fs-accent); }
+    .fs-pos-arrow:disabled { opacity: 0.3; cursor: default; }
+    .fs-position-select { flex: 1; min-width: 0; }
+
+    .fs-type-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+    .fs-type-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      padding: 8px 3px; border-radius: 7px; font: 500 0.62rem 'Plus Jakarta Sans', sans-serif;
+      border: 1px solid var(--fs-border); background: var(--fs-bg-overlay);
+      color: var(--fs-muted); cursor: pointer; transition: all 0.12s; text-align: center; line-height: 1;
+    }
+    .fs-type-btn svg { flex-shrink: 0; }
+    .fs-type-btn:hover { background: var(--fs-bg-hover); color: var(--fs-ink); }
+    .fs-type-btn.fs-type-btn--active { border-color: var(--fs-accent); background: var(--fs-accent-dim); color: var(--fs-accent); }
+    .fs-color-input { width: 34px; height: 28px; padding: 1px 2px; border: 1px solid var(--fs-border); border-radius: 6px; cursor: pointer; background: none; }
+    .fs-color-well {
+      width: 54px; height: 38px; flex-shrink: 0; padding: 3px;
+      border: 1.5px solid rgba(15,20,50,0.20); border-radius: 8px;
+      cursor: pointer; background: none;
+    }
+    .fs-color-well::-webkit-color-swatch-wrapper { padding: 0; border-radius: 5px; overflow: hidden; }
+    .fs-color-well::-webkit-color-swatch { border: none; border-radius: 5px; }
+    .fs-color-well:hover { border-color: var(--fs-accent); }
+    .fs-color-info { display: flex; flex-direction: column; justify-content: center; gap: 2px; flex: 1; min-width: 0; }
+    .fs-color-val { font: 600 0.73rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fs-color-reset { font: 0.68rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-accent); background: none; border: none; cursor: pointer; padding: 0; text-align: left; }
+    .fs-color-reset:hover { text-decoration: underline; }
+    .fs-color-row { display: flex; align-items: center; gap: 10px; }
+    .fs-font-num {
+      width: 58px; flex-shrink: 0; padding: 5px 6px;
+      background: var(--fs-bg-input); border: 1px solid var(--fs-border); border-radius: 7px;
+      font: 600 0.82rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+      text-align: center; outline: none;
+    }
+    .fs-font-num:focus { border-color: var(--fs-accent); }
+    .fs-font-num::placeholder { color: var(--fs-muted); font-weight: 400; }
+      width: 100%; min-height: 70px; background: var(--fs-bg-input);
+      border: 1px dashed rgba(232,168,56,0.25); border-radius: 8px;
+      padding: 8px 10px; font: 0.78rem 'Plus Jakarta Sans', sans-serif;
+      color: var(--fs-muted); resize: vertical; outline: none;
+    }
+    .fs-import-area:focus { border-color: var(--fs-accent); color: var(--fs-ink); }
+
+    /* ── Responsive editor ─────────────────────────────────────────────── */
+    /* 900px: tighten columns — slide list + props panel shrink a little */
+    @media (max-width: 900px) {
+      .fs-editor-body { grid-template-columns: 160px 1fr 220px; }
+    }
+    /* 740px: compact further */
+    @media (max-width: 740px) {
+      .fs-editor-body { grid-template-columns: 140px 1fr 200px; }
+      #fs-slide-props { padding: 10px 9px; gap: 10px; }
+      .fs-prop-label { font-size: 0.62rem; }
+    }
+    /* 600px: stack vertically — slide list col as horizontal strip on top */
+    @media (max-width: 600px) {
+      .fs-editor-body { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+      #fs-slide-list-col { flex-direction: row; border-right: none; border-bottom: 1px solid var(--fs-border); max-height: 110px; }
+      #fs-slide-list-col .fs-add-slide-wrap { border-bottom: none; border-right: 1px solid var(--fs-border); width: 80px; flex-shrink: 0; }
+      #fs-slide-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 4px 5px; }
+      .fs-slide-item { flex-shrink: 0; width: 72px; }
+      #fs-slide-props { border-left: none; border-top: 1px solid var(--fs-border); max-height: 280px; overflow-y: auto; }
+    }
+    @media (max-width: 480px) {
+      #fs-library { padding: 18px 16px 60px; }
+      .fs-lib-header { gap: 8px; }
+      #fs-subbar { padding: 6px 12px; gap: 6px; }
+    }
+
+    /* ── New Show name modal ────────────────────────────────────────── */
+    #fs-name-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #fs-name-modal[hidden] { display: none !important; }
+    .fs-nm-backdrop {
+      position: absolute; inset: 0;
+      background: var(--fs-modal-dim); backdrop-filter: blur(4px);
+    }
+    .fs-nm-box {
+      position: relative; z-index: 1;
+      background: var(--fs-panel); border: 1px solid var(--fs-border);
+      border-radius: 16px; width: min(400px, 92vw);
+      padding: 24px 24px 20px;
+      box-shadow: 0 24px 72px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .fs-nm-title {
+      font: 700 1rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+    }
+    .fs-nm-input {
+      width: 100%; padding: 10px 14px;
+      background: var(--fs-panel-alt); border: 1.5px solid var(--fs-border);
+      border-radius: 10px;
+      font: 500 0.95rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+      outline: none;
+    }
+    .fs-nm-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(232,168,56,0.12); }
+    .fs-nm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Confirm modal ──────────────────────────────────────────────── */
+    #fs-confirm-modal {
+      position: fixed; inset: 0; z-index: 1001;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #fs-confirm-modal[hidden] { display: none !important; }
+    .fs-cm-backdrop {
+      position: absolute; inset: 0;
+      background: var(--fs-modal-dim); backdrop-filter: blur(4px);
+    }
+    .fs-cm-box {
+      position: relative; z-index: 1;
+      background: var(--fs-panel); border: 1px solid var(--fs-border);
+      border-radius: 16px; width: min(380px, 92vw);
+      padding: 22px 24px 18px;
+      box-shadow: 0 24px 72px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .fs-cm-title { font: 700 0.95rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); }
+    .fs-cm-msg   { font: 0.84rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); line-height: 1.5; }
+    .fs-cm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Song picker modal (FlockStand import) ─────────────────────── */
+    #fs-song-picker {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #fs-song-picker[hidden] { display: none !important; }
+    .fs-sp-backdrop {
+      position: absolute; inset: 0;
+      background: var(--fs-modal-dim); backdrop-filter: blur(4px);
+    }
+    .fs-sp-panel {
+      position: relative; z-index: 1;
+      background: var(--fs-panel); border: 1px solid var(--fs-border);
+      border-radius: 18px; width: min(520px, 92vw); max-height: min(620px, 88vh);
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 32px 96px rgba(0,0,0,0.7);
+    }
+    .fs-sp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--fs-border);
+      flex-shrink: 0;
+    }
+    .fs-sp-title {
+      display: flex; align-items: center; gap: 8px;
+      font: 700 0.92rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink);
+    }
+    .fs-sp-title svg { color: var(--fs-accent); flex-shrink: 0; }
+    .fs-sp-close {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--fs-bg-overlay); border: none; color: var(--fs-muted);
+      font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s; flex-shrink: 0;
+    }
+    .fs-sp-close:hover { background: var(--fs-bg-hover); color: var(--fs-ink); }
+    .fs-sp-search-wrap {
+      position: relative; padding: 12px 18px; flex-shrink: 0;
+      border-bottom: 1px solid var(--fs-border);
+    }
+    .fs-sp-search-icon {
+      position: absolute; left: 30px; top: 50%; transform: translateY(-50%);
+      color: var(--fs-muted); pointer-events: none;
+    }
+    .fs-sp-search {
+      width: 100%; padding: 8px 14px 8px 36px;
+      background: var(--fs-bg-input); border: 1px solid var(--fs-border); border-radius: 10px;
+      font: 0.84rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); outline: none;
+    }
+    .fs-sp-search::placeholder { color: var(--fs-muted); }
+    .fs-sp-search:focus { border-color: var(--fs-accent); }
+    .fs-sp-list {
+      flex: 1; overflow-y: auto; padding: 8px 10px;
+      scrollbar-width: thin; scrollbar-color: rgba(232,168,56,0.15) transparent;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .fs-sp-item {
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      border: 1px solid transparent; transition: all 0.12s;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .fs-sp-item:hover { background: rgba(232,168,56,0.08); border-color: rgba(232,168,56,0.20); }
+    .fs-sp-item-title { font: 600 0.86rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); }
+    .fs-sp-item-meta { font: 0.72rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); }
+    .fs-sp-footer {
+      padding: 10px 18px; border-top: 1px solid var(--fs-border); flex-shrink: 0;
+    }
+    .fs-sp-status { font: 0.73rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-muted); }
+
+    /* ── Browser default overrides ──────────────────────────────────── */
+    input:not([type=color]):not([type=range]),
+    textarea, select {
+      -webkit-appearance: none; appearance: none;
+    }
+    input[type="search"]::-webkit-search-decoration,
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-results-button { display: none; }
+    input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--fs-ink) !important;
+      -webkit-box-shadow: 0 0 0 100px var(--fs-panel-alt) inset !important;
+      transition: background-color 9999s ease-in-out 0s;
+    }
+
+    /* ── Range slider ───────────────────────────────────────────────── */
+    .fs-range {
+      -webkit-appearance: none; appearance: none;
+      flex: 1; height: 4px; border-radius: 4px; outline: none; cursor: pointer;
+      background: var(--fs-border);
+    }
+    .fs-range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--fs-accent); cursor: pointer;
+      box-shadow: 0 2px 8px rgba(232,168,56,0.45);
+    }
+    .fs-range::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%; border: none;
+      background: var(--fs-accent); cursor: pointer;
+    }
+    .fs-font-row { display: flex; align-items: center; gap: 8px; }
+    .fs-range-val { font: 600 0.75rem 'Plus Jakarta Sans',sans-serif; color: var(--fs-accent); min-width: 40px; text-align: right; flex-shrink: 0; }
+
+    /* ── Background theme swatches ──────────────────────────────────── */
+    .fs-theme-swatches { display: flex; flex-wrap: wrap; gap: 5px; }
+    .fs-swatch {
+      width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+      border: 2px solid transparent; transition: all 0.13s; flex-shrink: 0;
+    }
+    .fs-swatch:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.35); }
+    .fs-swatch.fs-swatch--active { border-color: var(--fs-accent); box-shadow: 0 0 0 3px var(--fs-accent-dim); }
+
+    /* ── Show theme section ─────────────────────────────────────────── */
+    .fs-show-theme-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px;
+      background: var(--fs-bg-input); border: 1px solid var(--fs-border); min-height: 36px;
+    }
+    .fs-theme-chip { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.12); }
+    .fs-show-theme-label { font: 0.72rem 'Plus Jakarta Sans',sans-serif; color: var(--fs-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fs-theme-action-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+
+    /* ── Bible picker section ───────────────────────────────────────── */
+    .fs-bible-row { display: flex; gap: 6px; margin-bottom: 5px; }
+    .fs-bible-select {
+      flex: 1; padding: 6px 28px 6px 10px; background: var(--fs-bg-input);
+      border: 1px solid var(--fs-border); border-radius: 8px;
+      font: 0.79rem 'Plus Jakarta Sans',sans-serif; color: var(--fs-ink); outline: none;
+      cursor: pointer; -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(240,241,248,0.35)'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 9px center;
+    }
+    .fs-bible-select:focus { border-color: var(--fs-accent); background-color: rgba(232,168,56,0.05); }
+    .fs-bible-select option, select.fs-prop-input option { background: var(--fs-panel); color: var(--fs-ink); }
+    .fs-bible-status {
+      font: 0.73rem 'Plus Jakarta Sans',sans-serif; color: var(--fs-muted);
+      background: var(--bg-panel); border: 1px solid transparent;
+      border-radius: 6px; padding: 6px 9px; line-height: 1.5;
+      word-break: break-word; margin-top: 4px;
+    }
+    .fs-bible-status--ok  { color: #4ade80; background: rgba(74,222,128,0.07); border-color: rgba(74,222,128,0.15); }
+    .fs-bible-status--err { color: var(--fs-danger); background: rgba(248,113,113,0.07); border-color: rgba(248,113,113,0.15); }
+    .fs-bible-btn-row { display: flex; gap: 5px; margin-top: 5px; }
+
+    /* ── Select override (props panel) ──────────────────────────────── */
+    select.fs-prop-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(240,241,248,0.35)'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px; cursor: pointer;
+    }
+    /* ── Library header actions ──────────────────────────────────────── */
+    .fs-lib-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+    /* ── Props panel visual polish ────────────────────────────────────── */
+    .fs-prop-section {
+      display: flex; flex-direction: column; gap: 7px;
+      padding: 10px 11px; background: var(--fs-panel);
+      border: 1px solid var(--fs-border); border-radius: 10px;
+    }
+    .fs-prop-label {
+      font: 600 0.65rem 'Plus Jakarta Sans', sans-serif;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--fs-accent); opacity: 0.8;
+    }
+    .fs-prop-input {
+      width: 100%; padding: 8px 10px; background: var(--fs-bg-input);
+      border: 1px solid var(--fs-border); border-radius: 8px;
+      font: 0.80rem 'Plus Jakarta Sans', sans-serif; color: var(--fs-ink); outline: none; resize: vertical;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .fs-prop-input:focus { border-color: var(--fs-accent); background: rgba(232,168,56,0.05); }
+    .fs-prop-input::placeholder { color: var(--ink-faint); }
+    .fs-prop-textarea { min-height: 90px; }
+    .fs-prop-divider { display: none; }
+
+    /* ── Props panel: scoped light cream theme ────────────────────────── */
+    #fs-slide-props {
+      --fs-panel:      #fdf8f0;
+      --fs-panel-alt:  #f7f0e4;
+      --fs-border:     rgba(15,20,50,0.13);
+      --fs-ink:        rgba(15,20,50,0.90);
+      --fs-muted:      rgba(15,20,50,0.52);
+      --fs-bg-input:   rgba(255,255,255,0.82);
+      --fs-bg-overlay: rgba(15,20,50,0.05);
+      --fs-bg-hover:   rgba(15,20,50,0.09);
+      --fs-accent-dim: rgba(232,168,56,0.22);
+      background: #f5f0e4;
+    }
+    /* Dark-arrow SVG for selects inside light panel */
+    #fs-slide-props select.fs-prop-input,
+    #fs-slide-props .fs-bible-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(15%2C20%2C50%2C0.45)'/%3E%3C/svg%3E");
+    }
+    /* Prop section labels: dark navy on cream (not gold-on-gold) */
+    #fs-slide-props .fs-prop-label { color: rgba(15,20,50,0.55); opacity: 1; }
+    /* Swatch + chip borders for light panel */
+    #fs-slide-props .fs-swatch:hover { border-color: rgba(15,20,50,0.38); }
+    #fs-slide-props .fs-theme-chip   { border-color: rgba(15,20,50,0.15); }
+
+    /* ── Library header: cream-safe overrides ──────────────────────────── */
+    .fs-lib-title { color: rgba(15,20,50,0.90); }
+    #fs-import-show-btn,
+    #fs-import-pro-btn,
+    #fs-export-show-btn {
+      background: rgba(15,20,50,0.08);
+      color: rgba(15,20,50,0.82);
+      border: 1px solid rgba(15,20,50,0.22);
+      box-shadow: none;
+    }
+    #fs-import-show-btn:hover,
+    #fs-import-pro-btn:hover,
+    #fs-export-show-btn:hover {
+      background: rgba(15,20,50,0.15);
+      color: rgba(15,20,50,1);
+      border-color: rgba(15,20,50,0.35);
+    }
+    #fs-export-show-btn:disabled { opacity: 0.35; }
+  </style>
+</head>
+<body>
+
+<div id="fs-root">
+
+  <!-- Unity header (mounted by flockshow.js) -->
+  <header class="unity-header" id="fs-topbar" role="banner"></header>
+
+  <!-- Subbar: Library/Editor tabs + Present -->
+  <nav id="fs-subbar" aria-label="FlockShow workspace">
+    <div class="fs-tab-bar" id="fs-tabs">
+      <button class="fs-tab fs-tab--active" data-tab="library">Library</button>
+      <button class="fs-tab" data-tab="editor" id="fs-editor-tab" disabled>Editor</button>
+    </div>
+
+    <div class="fs-topbar-right" id="fs-topbar-right">
+      <button class="fs-btn fs-btn--primary" id="fs-present-btn" disabled>▶ Present</button>
+    </div>
+  </nav>
+
+  <!-- ── Library view ─────────────────────────────────────────────────── -->
+  <div id="fs-library">
+    <div class="fs-lib-header">
+      <div class="fs-lib-title">My Shows</div>
+      <div class="fs-search-wrap">
+        <svg class="fs-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="fs-search" class="fs-search" type="search" placeholder="Search shows…">
+      </div>
+      <div class="fs-lib-actions">
+        <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-import-show-btn" title="Import show from JSON file">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import
+        </button>
+        <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-import-pro-btn" title="Import ProPresenter file (.pro6, .pro4, .txt)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          ProPresenter
+        </button>
+        <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-export-show-btn" title="Export active show as JSON file" disabled>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+      <button class="fs-btn fs-btn--primary" id="fs-new-show-btn">+ New Show</button>
+    </div>
+    <div id="fs-shows-grid" class="fs-shows-grid"></div>
+  </div>
+
+  <!-- ── Editor view ──────────────────────────────────────────────────── -->
+  <div id="fs-editor" hidden>
+    <div class="fs-editor-bar">
+      <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-back-btn">← Library</button>
+      <input id="fs-show-title" class="fs-show-title-input" type="text" placeholder="Show name…" maxlength="80">
+      <span class="fs-slide-count" id="fs-slide-count"></span>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-dup-slide-btn">Duplicate</button>
+        <button class="fs-btn fs-btn--danger fs-btn--sm" id="fs-del-slide-btn">Delete</button>
+      </div>
+    </div>
+
+    <div class="fs-editor-body">
+
+      <!-- Left: slide list column (pinned add-slide header + scrollable list) -->
+      <div id="fs-slide-list-col">
+        <div class="fs-add-slide-wrap" id="fs-add-slide-wrap">
+          <button class="fs-add-slide-btn" id="fs-add-slide-btn">+ Add Slide</button>
+          <div class="fs-add-type-menu" id="fs-add-type-menu" hidden>
+            <div class="fs-add-type-item" data-type="lyrics">🎵 Lyrics / Text</div>
+            <div class="fs-add-type-item" data-type="scripture">📖 Scripture</div>
+            <div class="fs-add-type-item" data-type="announce">📣 Announcement</div>
+            <div class="fs-add-type-item" data-type="blank">⬛ Blank Screen</div>
+          </div>
+        </div>
+        <div id="fs-slide-list"></div>
+      </div>
+
+      <!-- Center: slide preview -->
+      <div id="fs-slide-preview">
+        <div class="fs-preview-wrap">
+          <div class="fs-slide-canvas" id="fs-slide-canvas">
+            <div class="fs-canvas-label" id="fs-canvas-label" hidden></div>
+            <div class="fs-canvas-text" id="fs-canvas-text"></div>
+            <div class="fs-canvas-ref" id="fs-canvas-ref" hidden></div>
+          </div>
+        </div>
+        <div class="fs-preview-nav">
+          <button class="fs-nav-btn" id="fs-prev-btn" title="Previous slide">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span class="fs-prev-counter" id="fs-prev-counter">— / —</span>
+          <button class="fs-nav-btn" id="fs-next-btn" title="Next slide">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-go-live-btn" style="margin-left:8px" title="Go to this slide in present window">Go Live</button>
+        </div>
+      </div>
+
+      <!-- Right: properties -->
+      <div id="fs-slide-props">
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Show Info <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.60rem;opacity:0.6">— watermark on all slides</span></div>
+          <input class="fs-show-info-input" id="fs-show-sermon-title" type="text" placeholder="Sermon title (shown faintly on screen)…" maxlength="80">
+          <input class="fs-show-info-input" id="fs-show-speaker" type="text" placeholder="Preacher name…" maxlength="60">
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Slide Type</div>
+          <div class="fs-type-grid">
+            <button class="fs-type-btn" data-type="lyrics">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              <span>Lyrics</span>
+            </button>
+            <button class="fs-type-btn" data-type="scripture">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <span>Scripture</span>
+            </button>
+            <button class="fs-type-btn" data-type="announce">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 11 18-9v20L3 13"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+              <span>Announce</span>
+            </button>
+            <button class="fs-type-btn" data-type="blank">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              <span>Blank</span>
+            </button>
+          </div>
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Slide Position</div>
+          <div class="fs-position-row">
+            <button class="fs-pos-arrow" id="fs-slide-up-btn" title="Move slide up"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m18 15-6-6-6 6"/></svg></button>
+            <select class="fs-prop-input fs-position-select" id="fs-slide-pos-select"></select>
+            <button class="fs-pos-arrow" id="fs-slide-down-btn" title="Move slide down"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section" id="fs-prop-text-section">
+          <div class="fs-prop-label">Slide Label <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.60rem;opacity:0.6">— shown top-left on slide</span></div>
+          <input class="fs-prop-input" id="fs-prop-slide-label" type="text" placeholder="e.g. Point 1, Chorus, Intro…" maxlength="60">
+
+          <div class="fs-prop-label" style="margin-top:8px">Text Alignment</div>
+          <div class="fs-align-row">
+            <button class="fs-align-btn" data-align="left" title="Align left"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg></button>
+            <button class="fs-align-btn fs-align-btn--active" data-align="center" title="Align center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="7" y2="12"/><line x1="19" y1="18" x2="5" y2="18"/></svg></button>
+            <button class="fs-align-btn" data-align="right" title="Align right"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="12" x2="9" y2="12"/><line x1="21" y1="18" x2="7" y2="18"/></svg></button>
+          </div>
+
+          <div class="fs-prop-label" style="margin-top:8px">Text</div>
+          <div class="fs-fmt-toolbar">
+            <button type="button" class="fs-fmt-btn" data-fmt-open="**" data-fmt-close="**" title="Bold — select text first"><strong>B</strong></button>
+            <button type="button" class="fs-fmt-btn" data-fmt-open="_" data-fmt-close="_" title="Italic — select text first"><em>I</em></button>
+            <button type="button" class="fs-fmt-btn" data-fmt-open="__" data-fmt-close="__" title="Underline — select text first"><u>U</u></button>
+            <button type="button" class="fs-fmt-btn" data-fmt-open="==" data-fmt-close="==" title="Highlight — select text first" style="color:rgba(232,168,56,0.85)">H</button>
+            <span class="fs-fmt-hint">Select → B / I / U / H &nbsp;·&nbsp; ⌘B / ⌘I / ⌘U</span>
+          </div>
+          <textarea class="fs-prop-input fs-prop-textarea" id="fs-prop-text" placeholder="Type slide text…" rows="5"></textarea>
+        </div>
+
+        <div class="fs-prop-section" id="fs-prop-ref-section" hidden>
+          <div class="fs-prop-label">Scripture Reference</div>
+          <input class="fs-prop-input" id="fs-prop-ref" type="text" placeholder="e.g. John 3:16 (KJV)">
+        </div>
+
+        <!-- Bible verse lookup — visible when type = scripture -->
+        <div class="fs-prop-section" id="fs-bible-section" hidden>
+          <div class="fs-prop-label">Bible Verse Lookup</div>
+          <div class="fs-bible-row">
+            <select class="fs-bible-select" id="fs-bible-translation" title="Translation">
+              <option value="kjv">KJV</option>
+              <option value="web">WEB (World English)</option>
+              <option value="asv">ASV</option>
+              <option value="bbe">BBE (Basic English)</option>
+              <option value="darby">Darby</option>
+              <option value="ylt">Young's Literal</option>
+              <option value="dra">Douay-Rheims</option>
+            </select>
+          </div>
+          <input class="fs-prop-input" id="fs-bible-query" type="text"
+            placeholder="e.g. John 3:16 or Romans 8:28-30" autocomplete="off">
+          <div class="fs-bible-btn-row">
+            <button class="fs-btn fs-btn--primary fs-btn--sm" id="fs-bible-fetch-btn">Fetch Verse</button>
+            <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-bible-split-btn" hidden>Split Verses</button>
+          </div>
+          <div id="fs-bible-status" class="fs-bible-status" hidden></div>
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Background Color</div>
+          <div class="fs-color-row">
+            <input class="fs-color-well" id="fs-prop-bg" type="color" value="#0b0d14" title="Click to change background color">
+            <div class="fs-color-info">
+              <span class="fs-color-val" id="fs-prop-bg-label">Default</span>
+              <button class="fs-color-reset" id="fs-prop-bg-reset">Reset to default</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Text Color</div>
+          <div class="fs-color-row">
+            <input class="fs-color-well" id="fs-prop-tc" type="color" value="#f0f1f8" title="Click to change text color">
+            <div class="fs-color-info">
+              <span class="fs-color-val" id="fs-prop-tc-label">Default</span>
+              <button class="fs-color-reset" id="fs-prop-tc-reset">Reset to default</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Font Size</div>
+          <div class="fs-font-row">
+            <input type="range" class="fs-range" id="fs-prop-font-size" min="12" max="120" step="4" value="0">
+            <input type="number" class="fs-font-num" id="fs-prop-font-size-num" min="12" max="120" step="4" placeholder="Auto">
+          </div>
+          <button class="fs-color-reset" id="fs-prop-font-reset" style="align-self:flex-start;margin-top:3px">Reset to Auto</button>
+        </div>
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Background Preset</div>
+          <div class="fs-theme-swatches" id="fs-theme-swatches"></div>
+        </div>
+
+        <div class="fs-prop-section" id="fs-show-theme-section">
+          <div class="fs-prop-label">Show Theme <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.62rem;opacity:0.65">— default for all slides</span></div>
+          <div class="fs-show-theme-bar">
+            <div class="fs-theme-chip" id="fs-show-theme-chip" style="background:#0b0d14"></div>
+            <span class="fs-show-theme-label" id="fs-show-theme-label">None set</span>
+            <button class="fs-color-reset" id="fs-clear-show-theme-btn">Clear</button>
+          </div>
+          <div class="fs-theme-action-row">
+            <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-set-show-theme-btn">⭐ Set from Slide</button>
+            <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-apply-all-btn">Apply to All Slides</button>
+          </div>
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Stage Notes</div>
+          <textarea class="fs-prop-input" id="fs-prop-notes" placeholder="Notes visible to presenter in present window…" rows="3"></textarea>
+        </div>
+
+        <hr class="fs-prop-divider">
+
+        <div class="fs-prop-section">
+          <div class="fs-prop-label">Import Lyrics</div>
+          <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-from-stand-btn" style="align-self:flex-start;margin-bottom:8px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2"/></svg>
+            From FlockStand…
+          </button>
+          <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-from-sermon-btn" style="align-self:flex-start;margin-bottom:8px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            From Sermon…
+          </button>
+          <textarea class="fs-import-area" id="fs-import-area"
+            placeholder="Paste full lyrics — blank lines become separate slides…" rows="5"></textarea>
+          <button class="fs-btn fs-btn--ghost fs-btn--sm" id="fs-import-btn" style="margin-top:4px;align-self:flex-start">Split into slides</button>
+        </div>
+      </div>
+
+    </div><!-- /.fs-editor-body -->
+  </div><!-- /#fs-editor -->
+
+
+
+</div><!-- /#fs-root -->
+
+<!-- Auth overlay (shown until Nehemiah confirms session) -->
+<div id="fs-auth-overlay"></div>
+
+<!-- New Show name modal -->
+<div id="fs-name-modal" hidden aria-modal="true" role="dialog" aria-label="Name your show">
+  <div class="fs-nm-backdrop" id="fs-nm-backdrop"></div>
+  <div class="fs-nm-box">
+    <div class="fs-nm-title" id="fs-nm-title">Show Name</div>
+    <input id="fs-nm-input" class="fs-nm-input" type="text" value="New Show" maxlength="80" autocomplete="off" spellcheck="false">
+    <div class="fs-nm-actions">
+      <button class="fs-btn fs-btn--ghost" id="fs-nm-cancel">Cancel</button>
+      <button class="fs-btn fs-btn--primary" id="fs-nm-ok">Create Show</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal (delete show, delete slide, sign out) -->
+<div id="fs-confirm-modal" hidden aria-modal="true" role="alertdialog">
+  <div class="fs-cm-backdrop" id="fs-cm-backdrop"></div>
+  <div class="fs-cm-box">
+    <div class="fs-cm-title" id="fs-cm-title">Are you sure?</div>
+    <div class="fs-cm-msg"   id="fs-cm-msg"></div>
+    <div class="fs-cm-actions">
+      <button class="fs-btn fs-btn--ghost"  id="fs-cm-cancel">Cancel</button>
+      <button class="fs-btn fs-btn--danger" id="fs-cm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Song picker modal (FlockStand → FlockShow import) -->
+<div id="fs-song-picker" hidden aria-modal="true" role="dialog" aria-label="Pick a song from FlockStand">
+  <div class="fs-sp-backdrop" id="fs-sp-backdrop"></div>
+  <div class="fs-sp-panel">
+    <div class="fs-sp-header">
+      <div class="fs-sp-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2"/></svg>
+        Import from FlockStand
+      </div>
+      <button class="fs-sp-close" id="fs-sp-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="fs-sp-search-wrap">
+      <svg class="fs-sp-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="fs-sp-search" class="fs-sp-search" type="search" placeholder="Search songs…" autocomplete="off">
+    </div>
+    <div id="fs-sp-list" class="fs-sp-list"></div>
+    <div class="fs-sp-footer">
+      <span id="fs-sp-status" class="fs-sp-status">Loading songs…</span>
+    </div>
+  </div>
+</div>
+
+<!-- Sermon picker modal (FlockOS sermons → FlockShow) -->
+<div id="fs-sermon-picker" hidden aria-modal="true" role="dialog" aria-label="Pick a sermon">
+  <div class="fs-sp-backdrop" id="fs-serm-backdrop"></div>
+  <div class="fs-sp-panel">
+    <div class="fs-sp-header">
+      <div class="fs-sp-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Import from Sermon
+      </div>
+      <button class="fs-sp-close" id="fs-serm-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="fs-sp-search-wrap">
+      <svg class="fs-sp-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="fs-serm-search" class="fs-sp-search" type="search" placeholder="Search sermons…" autocomplete="off">
+    </div>
+    <div id="fs-serm-list" class="fs-sp-list"></div>
+    <div class="fs-sp-footer">
+      <span id="fs-serm-status" class="fs-sp-status">Loading sermons…</span>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase (Auth + Firestore — used by Nehemiah auth gate and FlockStand song picker) -->
+<script>
+  window.FLOCK_FIREBASE_CONFIG = window.FLOCK_FIREBASE_CONFIG || null;
+</script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+
+<!-- FlockOS auth gate (Nehemiah requires TheVine for session checks) -->
+<script defer src="Scripts/the_true_vine.js"></script>
+<script defer src="Scripts/firm_foundation.js"></script>
+
+<!-- FlockStand song library (for "From FlockStand" picker) -->
+<script defer src="Scripts/the_upper_room.js"></script>
+
+<script type="module" src="app.flockshow/flockshow.js"></script>
+
+</body>
+</html>

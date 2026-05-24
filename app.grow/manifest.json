@@ -1,0 +1,83 @@
+{
+  "name": "GROW by FlockOS",
+  "short_name": "GROW",
+  "description": "Free discipleship tools in 210 countries \u2014 Bible reading plans, devotionals, Strongs lexicons, apologetics, theology, missions, and more. No account required. Offline-capable.",
+  "start_url": "./app.grow.html",
+  "id": "./app.grow.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c1445",
+  "theme_color": "#d97706",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "../Images/icon-grow.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "../Images/icon-grow.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "../Images/icon-grow.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "../Images/FlockIcon-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Reading Plans",
+      "short_name": "Reading",
+      "description": "Open the one-year Bible reading plan",
+      "url": "./app.grow.html#the_gospel_reading",
+      "icons": [
+        {
+          "src": "../Images/icon-grow.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Devotionals",
+      "short_name": "Devotionals",
+      "description": "Open daily devotionals",
+      "url": "./app.grow.html#the_gospel_devotionals",
+      "icons": [
+        {
+          "src": "../Images/icon-grow.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "Lexicon",
+      "short_name": "Lexicon",
+      "description": "Open Strongs Hebrew & Greek lexicon",
+      "url": "./app.grow.html#the_gospel_lexicon",
+      "icons": [
+        {
+          "src": "../Images/icon-grow.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -1,0 +1,16 @@
+{
+  "name": "The Flock Herald",
+  "short_name": "FlockNews",
+  "description": "Daily ministry news, devotionals, and missions — free to the Body of Christ.",
+  "start_url": "app.flocknews/flocknews.html",
+  "display": "standalone",
+  "background_color": "#f7f2e7",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "../Images/icon-flocknews.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

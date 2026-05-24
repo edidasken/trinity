@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>FlockChat</title>
+  <link rel="icon" type="image/png" href="Images/icon-chat.svg">
+  <link rel="apple-touch-icon" href="Images/icon-chat.svg">
+  <link rel="manifest" href="app.flockchat/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FlockChat">
+  <meta name="theme-color" content="#06b6d4">
+  <meta name="description" content="FlockChat — Beautiful church messaging">
+
+  <!-- Preconnect to fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Theme bootstrap (before stylesheet to prevent flash) -->
+  <script>(function(){var t=localStorage.getItem('flock_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+
+  <!-- Shared stylesheet -->
+  <link rel="stylesheet" href="Styles/new_covenant.css">
+
+  <style>
+    /* ─── Reset ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100dvh; overflow: hidden; overscroll-behavior: none; }
+
+    /* ─── Design Tokens (iMessage-inspired) ──────────────────────────── */
+    :root {
+      /* Core surfaces */
+      --fc-bg:          #f7f8fb;
+      --fc-surface:     #ffffff;
+      --fc-panel:       #f0f2f5;
+      
+      /* Message bubbles */
+      --fc-received-bg: #e9ecef;
+      --fc-received-text: #1b264f;
+      --fc-sent-bg:     #007aff;  /* iOS blue */
+      --fc-sent-text:   #ffffff;
+      
+      /* Text */
+      --fc-text:        #1b264f;
+      --fc-text-muted:  #6c757d;
+      --fc-text-light:  #adb5bd;
+      
+      /* Borders & dividers */
+      --fc-border:      #dee2e6;
+      --fc-divider:     #e9ecef;
+      
+      /* Special types */
+      --fc-prayer:      #a855f7;
+      --fc-announcement: #f59e0b;
+      --fc-unread:      #007aff;
+      
+      /* Shadows */
+      --fc-shadow-sm:   0 1px 2px rgba(0,0,0,0.05);
+      --fc-shadow-md:   0 4px 6px rgba(0,0,0,0.07);
+      --fc-shadow-lg:   0 10px 15px rgba(0,0,0,0.10);
+      
+      /* Safe areas */
+      --safe-top:       env(safe-area-inset-top, 0px);
+      --safe-bottom:    env(safe-area-inset-bottom, 0px);
+      
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      background: var(--fc-bg);
+      color: var(--fc-text);
+    }
+
+    /* ─── Boot Splash ────────────────────────────────────────────────── */
+    #fc-boot {
+      position: fixed; inset: 0;
+      background: var(--fc-bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1.25rem; z-index: 9000;
+      transition: opacity 0.3s ease;
+    }
+    #fc-boot.fade-out { opacity: 0; pointer-events: none; }
+    .fc-boot-icon {
+      width: 84px; height: 84px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #0c4a6e 0%, #06b6d4 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 14px 40px rgba(6, 182, 212, .35), 0 4px 12px rgba(0,0,0,.18);
+    }
+    .fc-boot-icon svg {
+      width: 44px; height: 44px;
+      stroke: #fff;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .fc-boot-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: var(--fc-text);
+      margin-top: .25rem;
+    }
+    .fc-boot-spinner {
+      width: 28px; height: 28px;
+      border: 2.5px solid var(--fc-border);
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: fc-spin 0.8s linear infinite;
+    }
+    @keyframes fc-spin { to { transform: rotate(360deg); } }
+    .fc-boot-status {
+      font-size: 0.875rem;
+      color: var(--fc-text-muted);
+    }
+
+    /* ─── App Shell ──────────────────────────────────────────────────── */
+    #fc-app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+    }
+    #fc-app[hidden] { display: none; }
+
+    /* ─── Top Bar (Unity Header) ─────────────────────────────────────── */
+    #fc-topbar { z-index: 100; }
+
+    /* ─── Main Container (2-col on desktop, single col on mobile) ───── */
+    .fc-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ─── Conversation List Pane ─────────────────────────────────────── */
+    .fc-list-pane {
+      width: 380px;
+      flex-shrink: 0;
+      background: var(--fc-surface);
+      border-right: 1px solid var(--fc-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .fc-list-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--fc-divider);
+      background: var(--fc-surface);
+    }
+    .fc-list-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .fc-list-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--fc-text);
+    }
+    .fc-new-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--fc-sent-bg);
+      border: none;
+      color: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s, opacity 0.12s;
+      flex-shrink: 0;
+    }
+    .fc-new-btn:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+    .fc-list-search {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--fc-panel);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      color: var(--fc-text);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .fc-list-search:focus {
+      background: var(--fc-surface);
+      border-color: var(--fc-sent-bg);
+    }
+    .fc-list-search::placeholder {
+      color: var(--fc-text-light);
+    }
+
+    .fc-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fc-list-scroll::-webkit-scrollbar { width: 0; }
+
+    /* ─── Conversation List Item ─────────────────────────────────────── */
+    .fc-conv-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      background: var(--fc-surface);
+      border-bottom: 1px solid var(--fc-divider);
+      cursor: pointer;
+      transition: background 0.12s;
+      position: relative;
+    }
+    .fc-conv-item:hover {
+      background: var(--fc-panel);
+    }
+    .fc-conv-item.active {
+      background: var(--fc-panel);
+    }
+    .fc-conv-item.unread {
+      background: color-mix(in srgb, var(--fc-sent-bg) 4%, var(--fc-surface));
+    }
+
+    /* ─── iOS-style Pinned Section ───────────────────────────────────── */
+    .fc-pinned-section {
+      padding: 14px 20px 16px;
+      background: var(--fc-surface);
+      border-bottom: 1px solid var(--fc-divider);
+    }
+    .fc-pinned-header {
+      display: flex; align-items: center; gap: 5px;
+      margin-bottom: 14px;
+    }
+    .fc-pinned-header-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      color: var(--fc-text-muted); text-transform: uppercase;
+    }
+    .fc-pinned-header-icon {
+      font-size: 10px; opacity: 0.55;
+    }
+    .fc-pinned-grid {
+      display: flex; flex-wrap: wrap; gap: 10px 8px;
+    }
+    .fc-pinned-item {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 0 0 auto; width: 72px; gap: 7px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .fc-pinned-bubble {
+      width: 62px; height: 62px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: transform 0.13s ease, box-shadow 0.13s ease;
+      flex-shrink: 0;
+      /* FlockChat palette — overridden per-type below */
+      background: linear-gradient(145deg, #0c4a6e, #06b6d4);
+      box-shadow: 0 2px 8px rgba(6,182,212,0.25);
+    }
+    .fc-pinned-bubble svg { display: block; flex-shrink: 0; }
+    .fc-pinned-item:hover .fc-pinned-bubble,
+    .fc-pinned-item:active .fc-pinned-bubble { transform: scale(0.94); }
+    .fc-pinned-item.active .fc-pinned-bubble {
+      box-shadow: 0 0 0 3px var(--fc-sent-bg);
+    }
+    /* Per-type colour variations — all in the same dark-navy → vivid family */
+    .fc-pinned-bubble.announcement {
+      background: linear-gradient(145deg, #0c4a6e, #0ea5e9);
+      box-shadow: 0 2px 8px rgba(14,165,233,0.28);
+    }
+    .fc-pinned-bubble.prayer {
+      background: linear-gradient(145deg, #1e1b4b, #6366f1);
+      box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+    }
+    .fc-pinned-bubble.pastoral {
+      background: linear-gradient(145deg, #0c4a6e, #06b6d4);
+      box-shadow: 0 2px 8px rgba(6,182,212,0.28);
+    }
+    .fc-pinned-bubble.ministry-men {
+      background: linear-gradient(145deg, #0f2d5e, #3b82f6);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+    }
+    .fc-pinned-bubble.ministry-women {
+      background: linear-gradient(145deg, #2d1b69, #a78bfa);
+      box-shadow: 0 2px 8px rgba(167,139,250,0.3);
+    }
+    .fc-pinned-bubble.servant-team {
+      background: linear-gradient(145deg, #0c4a6e, #0891b2);
+      box-shadow: 0 2px 8px rgba(8,145,178,0.3);
+    }
+    .fc-pinned-bubble.worship-team {
+      background: linear-gradient(145deg, #1e1b4b, #818cf8);
+      box-shadow: 0 2px 8px rgba(129,140,248,0.3);
+    }
+    .fc-pinned-bubble.missions-team {
+      background: linear-gradient(145deg, #0f3820, #22c55e);
+      box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+    }
+    .fc-pinned-bubble.church-life {
+      background: linear-gradient(145deg, #3b0d1e, #f43f5e);
+      box-shadow: 0 2px 8px rgba(244,63,94,0.3);
+    }
+    .fc-pinned-bubble.stewardship {
+      background: linear-gradient(145deg, #1c1200, #f59e0b);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    }
+    .fc-pinned-bubble.outreach {
+      background: linear-gradient(145deg, #0f2d5e, #60a5fa);
+      box-shadow: 0 2px 8px rgba(96,165,250,0.3);
+    }
+    .fc-pinned-badge {
+      position: absolute; top: -1px; right: -1px;
+      background: #ff3b30; color: #fff; border-radius: 10px;
+      font-size: 10px; font-weight: 700; min-width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 5px; border: 2px solid var(--fc-surface);
+    }
+    .fc-pinned-name {
+      font-size: 11.5px; font-weight: 500; text-align: center;
+      color: var(--fc-text); line-height: 1.3;
+      max-width: 80px;
+      overflow: hidden;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .fc-pinned-preview-dot {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--fc-surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; line-height: 1;
+    }
+    /* Dark mode overrides */
+    [data-theme="dark"] .fc-pinned-section { background: var(--fc-panel); }
+    [data-theme="dark"] .fc-pinned-badge { border-color: var(--fc-panel); }
+
+    .fc-conv-icon {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      box-shadow: 0 2px 6px rgba(6,182,212,0.22);
+      color: white;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+    .fc-conv-icon svg { display: block; flex-shrink: 0; }
+    .fc-conv-icon.prayer {
+      background: linear-gradient(135deg, #1e1b4b, #6366f1);
+      box-shadow: 0 2px 6px rgba(99,102,241,0.28);
+    }
+    .fc-conv-icon.announcement {
+      background: linear-gradient(135deg, #0c4a6e, #0ea5e9);
+      box-shadow: 0 2px 6px rgba(14,165,233,0.26);
+    }
+    .fc-conv-icon.dm {
+      background: linear-gradient(135deg, #0f2d5e, #3b82f6);
+      box-shadow: 0 2px 6px rgba(59,130,246,0.28);
+    }
+    .fc-conv-icon.sms {
+      background: linear-gradient(135deg, #065f46, #10b981);
+      box-shadow: 0 2px 6px rgba(16,185,129,0.26);
+    }
+    .fc-conv-icon.pastoral {
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      box-shadow: 0 2px 6px rgba(6,182,212,0.28);
+    }
+    .fc-conv-icon.ministry-men {
+      background: linear-gradient(135deg, #0f2d5e, #3b82f6);
+      box-shadow: 0 2px 6px rgba(59,130,246,0.28);
+    }
+    .fc-conv-icon.ministry-women {
+      background: linear-gradient(135deg, #2d1b69, #a78bfa);
+      box-shadow: 0 2px 6px rgba(167,139,250,0.28);
+    }
+    .fc-conv-icon.servant-team {
+      background: linear-gradient(135deg, #0c4a6e, #0891b2);
+      box-shadow: 0 2px 6px rgba(8,145,178,0.28);
+    }
+    .fc-conv-icon.worship-team {
+      background: linear-gradient(135deg, #1e1b4b, #818cf8);
+      box-shadow: 0 2px 6px rgba(129,140,248,0.28);
+    }
+    .fc-conv-icon.missions-team {
+      background: linear-gradient(135deg, #0f3820, #22c55e);
+      box-shadow: 0 2px 6px rgba(34,197,94,0.28);
+    }
+    .fc-conv-icon.church-life {
+      background: linear-gradient(135deg, #3b0d1e, #f43f5e);
+      box-shadow: 0 2px 6px rgba(244,63,94,0.28);
+    }
+    .fc-conv-icon.stewardship {
+      background: linear-gradient(135deg, #1c1200, #f59e0b);
+      box-shadow: 0 2px 6px rgba(245,158,11,0.28);
+    }
+    .fc-conv-icon.outreach {
+      background: linear-gradient(135deg, #0f2d5e, #60a5fa);
+      box-shadow: 0 2px 6px rgba(96,165,250,0.28);
+    }
+    .fc-user-item.sms .fc-user-avatar {
+      background: linear-gradient(135deg, #34d399, #10b981);
+    }
+    .fc-user-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+    .fc-user-badge.sms {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+    .fc-user-badge.muted {
+      background: rgba(148, 163, 184, 0.18);
+      color: #94a3b8;
+    }
+
+    .fc-conv-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .fc-conv-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .fc-conv-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fc-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fc-conv-time {
+      font-size: 0.8125rem;
+      color: var(--fc-text-muted);
+      flex-shrink: 0;
+    }
+
+    .fc-conv-preview {
+      font-size: 0.875rem;
+      color: var(--fc-text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fc-conv-item.unread .fc-conv-preview {
+      font-weight: 500;
+      color: var(--fc-text);
+    }
+
+    /* ─── Per-row action menu (Archive / Delete) ─────────────────────── */
+    .fc-conv-actions-btn {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--fc-text-muted);
+      font-size: 1.1rem;
+      line-height: 1;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.12s, background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .fc-conv-item:hover .fc-conv-actions-btn,
+    .fc-conv-actions-btn.open { opacity: 1; }
+    .fc-conv-actions-btn:hover { background: var(--fc-divider); }
+    @media (hover: none) {
+      .fc-conv-actions-btn { opacity: 0.7; }
+    }
+    .fc-conv-menu {
+      position: absolute;
+      top: calc(50% + 16px);
+      right: 14px;
+      background: var(--fc-surface);
+      border: 1px solid var(--fc-divider);
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12);
+      z-index: 20;
+      min-width: 160px;
+      overflow: hidden;
+    }
+    .fc-conv-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      color: var(--fc-text);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .fc-conv-menu button:hover { background: var(--fc-panel); }
+    .fc-conv-menu button.danger { color: #ef4444; }
+
+    .fc-archive-toggle {
+      width: 100%;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--fc-divider);
+      color: var(--fc-text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .fc-archive-toggle:hover { background: var(--fc-panel); color: var(--fc-text); }
+
+    .fc-conv-badge {
+      position: absolute;
+      top: 14px;
+      right: 20px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 10px;
+      background: var(--fc-unread);
+      color: white;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── Empty State ────────────────────────────────────────────────── */
+    .fc-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 60px 40px;
+      text-align: center;
+    }
+    .fc-empty-icon {
+      font-size: 4rem;
+      opacity: 0.3;
+    }
+    .fc-empty-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--fc-text);
+    }
+    .fc-empty-text {
+      font-size: 0.9375rem;
+      color: var(--fc-text-muted);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* ─── Message Thread Pane ────────────────────────────────────────── */
+    .fc-thread-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--fc-bg);
+      overflow: hidden;
+      position: relative; /* needed for manager drawer positioning */
+    }
+
+    .fc-thread-header {
+      padding: 14px 20px;
+      background: var(--fc-surface);
+      border-bottom: 1px solid var(--fc-divider);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .fc-thread-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      color: white;
+      flex-shrink: 0;
+    }
+    .fc-thread-icon svg { display: block; flex-shrink: 0; }
+    .fc-thread-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .fc-thread-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fc-text);
+    }
+    .fc-thread-meta {
+      font-size: 0.8125rem;
+      color: var(--fc-text-muted);
+    }
+    /* Admin manage button in thread header */
+    .fc-manage-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--fc-text-muted);
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 8px;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .fc-manage-btn:hover { background: var(--fc-divider); color: var(--fc-text); }
+
+    /* ─── Channel Manager Drawer ─────────────────────────────────────── */
+    .fc-mgr-overlay {
+      position: absolute; inset: 0; z-index: 40;
+      background: rgba(0,0,0,0.35);
+    }
+    .fc-mgr-drawer {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 50;
+      background: var(--fc-surface);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.18);
+      max-height: 88%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      animation: fc-mgr-slide-up 0.22s ease;
+    }
+    @keyframes fc-mgr-slide-up {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .fc-mgr-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--fc-divider);
+      flex-shrink: 0;
+    }
+    .fc-mgr-title {
+      font-size: 1.0625rem; font-weight: 700; color: var(--fc-text);
+    }
+    .fc-mgr-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--fc-text-muted); font-size: 1rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .fc-mgr-close:hover { background: var(--fc-divider); }
+    .fc-mgr-body {
+      flex: 1; overflow-y: auto; padding: 0 0 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fc-mgr-section {
+      padding: 14px 20px 6px;
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--fc-text-muted);
+    }
+    .fc-mgr-empty {
+      padding: 12px 20px;
+      font-size: 0.875rem; color: var(--fc-text-muted);
+      font-style: italic;
+    }
+    .fc-mgr-member {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--fc-divider);
+    }
+    .fc-mgr-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      color: white; font-size: 0.8125rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .fc-mgr-member-info { flex: 1; min-width: 0; }
+    .fc-mgr-member-name {
+      font-size: 0.9375rem; font-weight: 600; color: var(--fc-text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fc-mgr-member-sub {
+      font-size: 0.75rem; color: var(--fc-text-muted);
+    }
+    .fc-mgr-ban-btn {
+      background: none; border: 1px solid #f43f5e;
+      color: #f43f5e; border-radius: 8px;
+      padding: 4px 10px; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .fc-mgr-ban-btn:hover { background: #f43f5e; color: white; }
+    .fc-mgr-restore-btn {
+      background: none; border: 1px solid #22c55e;
+      color: #22c55e; border-radius: 8px;
+      padding: 4px 10px; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .fc-mgr-restore-btn:hover { background: #22c55e; color: white; }
+    /* Channel access mode toggle */
+    .fc-mgr-mode-row { display: flex; gap: 8px; }
+    .fc-mgr-mode-btn {
+      flex: 1; padding: 9px 0;
+      border: 1px solid var(--fc-divider); border-radius: 10px;
+      background: var(--fc-surface); color: var(--fc-text);
+      font-size: 0.875rem; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .fc-mgr-mode-btn.active {
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      color: #fff; border-color: transparent;
+    }
+    .fc-mgr-mode-desc {
+      margin-top: 7px; font-size: 0.8125rem;
+      color: var(--fc-text-muted, #6b7280);
+    }
+    /* Member search input */
+    .fc-mgr-search {
+      flex: 1; height: 36px; border-radius: 10px;
+      border: 1px solid var(--fc-divider);
+      background: var(--fc-bg); color: var(--fc-text);
+      padding: 0 12px; font-size: 0.875rem;
+      outline: none;
+    }
+    .fc-mgr-search:focus { border-color: #06b6d4; }
+    /* Scrollable user checklist */
+    .fc-mgr-user-list {
+      max-height: 200px; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      border-top: 1px solid var(--fc-divider);
+      border-bottom: 1px solid var(--fc-divider);
+    }
+    .fc-mgr-user-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px; cursor: pointer;
+      transition: background 0.12s;
+    }
+    .fc-mgr-user-item:hover { background: var(--fc-hover, rgba(0,0,0,0.04)); }
+    .fc-mgr-check {
+      width: 18px; height: 18px; accent-color: #06b6d4; flex-shrink: 0; cursor: pointer;
+    }
+    /* Add members button */
+    .fc-mgr-add-btn {
+      width: 100%; padding: 10px;
+      background: linear-gradient(135deg, #0c4a6e, #06b6d4);
+      color: white; border: none; border-radius: 10px;
+      font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .fc-mgr-add-btn:disabled { opacity: 0.4; cursor: default; }
+    .fc-mgr-add-btn:not(:disabled):hover { opacity: 0.88; }
+
+    /* ─── Info Channel Pins ──────────────────────────────────────────── */
+    .fc-pinned-bubble.info-flockchat { background: linear-gradient(145deg, #1e3a5f, #2563eb); }
+    .fc-pinned-bubble.info-flockos   { background: linear-gradient(145deg, #3b0764, #7c3aed); }
+    .fc-conv-icon.info-flockchat { background: linear-gradient(135deg, #1e3a5f, #2563eb); }
+    .fc-conv-icon.info-flockos   { background: linear-gradient(135deg, #3b0764, #7c3aed); }
+
+    /* ─── Sanctuary Channel Pin ──────────────────────────────────────── */
+    .fc-pinned-bubble.my-sanctuary { background: linear-gradient(145deg, #78350f, #d97706); }
+    .fc-conv-icon.my-sanctuary     { background: linear-gradient(135deg, #78350f, #d97706); }
+
+    /* ─── Recent Sermons Channel Pin ────────────────────────────────── */
+    .fc-pinned-bubble.recent-sermons { background: linear-gradient(145deg, #4c1d95, #7c3aed); }
+    .fc-conv-icon.recent-sermons     { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+
+    /* ─── FlockNews Channel Pin ─────────────────────────────────────── */
+    .fc-pinned-bubble.flocknews { background: linear-gradient(145deg, #854d0e, #e8a838); }
+    .fc-conv-icon.flocknews     { background: linear-gradient(135deg, #854d0e, #e8a838); }
+
+    /* ─── FlockNews Feed ────────────────────────────────────────────── */
+    .fc-flocknews-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 16px;
+    }
+    .fc-flocknews-intro {
+      text-align: center;
+      padding: 24px 20px;
+      background: rgba(232,168,56,0.08);
+      border-radius: 12px;
+      border: 1px solid rgba(232,168,56,0.2);
+    }
+    .fc-flocknews-intro h3 {
+      margin: 0 0 8px 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: #e8a838;
+    }
+    .fc-flocknews-intro p {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .fc-flocknews-card {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .fc-flocknews-card.fc-flocknews-empty {
+      opacity: 0.6;
+    }
+    .fc-flocknews-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      background: rgba(232,168,56,0.1);
+      border-bottom: 1px solid rgba(232,168,56,0.2);
+      font-weight: 700;
+      font-size: 14px;
+      color: #e8a838;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .fc-flocknews-date {
+      padding: 16px 20px 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      border-bottom: 1px solid var(--border);
+    }
+    .fc-flocknews-section {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fc-flocknews-section:last-of-type {
+      border-bottom: none;
+    }
+    .fc-flocknews-section h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #e8a838;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .fc-flocknews-content {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .fc-flocknews-link {
+      display: block;
+      padding: 14px 20px;
+      text-align: center;
+      background: rgba(232,168,56,0.1);
+      color: #e8a838;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      border-top: 1px solid rgba(232,168,56,0.2);
+      transition: background 0.2s;
+    }
+    .fc-flocknews-link:hover {
+      background: rgba(232,168,56,0.15);
+    }
+
+    /* ─── Recent Sermons Feed ───────────────────────────────────────── */
+    .fc-srm-feed       { gap: 20px; }
+    .fc-srm-avatar     { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .fc-srm-bubble     { overflow: hidden; padding: 0; gap: 0; }
+    .fc-srm-accent-bar { height: 4px; background: linear-gradient(90deg, #7c3aed, #a78bfa, #6d28d9); flex-shrink: 0; }
+    .fc-srm-body       { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+    .fc-srm-bubble > .fc-sct-word-bubble-sender { margin: 10px 16px 0; }
+    .fc-srm-title      { font-size: 1.1rem; font-weight: 800; color: var(--fc-text); line-height: 1.3; }
+    .fc-srm-meta-row   { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .fc-srm-preacher   { font-size: 0.85rem; font-weight: 600; color: #7c3aed; }
+    .fc-srm-dot        { color: var(--fc-text-muted, #9ca3af); font-size: 0.8rem; }
+    .fc-srm-date       { font-size: 0.8rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-srm-service-pill { display: inline-block; background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.25); border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 2px 9px; }
+    .fc-srm-series-pill  { display: inline-block; background: rgba(99,102,241,0.1); color: #6366f1; border: 1px solid rgba(99,102,241,0.22); border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 2px 9px; }
+    /* Click to View button (collapsed) */
+    .fc-srm-view-btn   { margin-top: 6px; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; border: none; border-radius: 20px; padding: 7px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.15s; align-self: flex-start; }
+    .fc-srm-view-btn:hover { opacity: 0.88; }
+    /* Expanded content */
+    .fc-srm-scripture  { background: rgba(124,58,237,0.07); border-left: 3px solid #7c3aed; padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 0.875rem; font-weight: 600; color: var(--fc-text); }
+    .fc-srm-summary-block { display: flex; flex-direction: column; gap: 3px; }
+    /* Section blocks */
+    .fc-srm-section       { display: flex; flex-direction: column; gap: 4px; }
+    .fc-srm-sec-label     { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: #7c3aed; }
+    .fc-srm-sec-ref       { font-size: 0.9rem; font-weight: 700; color: var(--fc-text); }
+    .fc-srm-sec-text      { font-size: 0.875rem; line-height: 1.65; color: var(--fc-text); }
+    .fc-srm-sec-italic    { font-style: italic; color: var(--fc-text-muted, #6b7280); }
+    .fc-srm-section-sep   { height: 1px; background: var(--fc-divider); margin: 4px 0; border-radius: 1px; }
+    /* Point sections */
+    .fc-srm-sec-point      { background: rgba(124,58,237,0.05); border-radius: 10px; padding: 10px 12px; }
+    .fc-srm-sec-point-heading { display: flex; align-items: baseline; gap: 8px; font-size: 0.95rem; font-weight: 700; color: var(--fc-text); margin-bottom: 3px; }
+    .fc-srm-sec-point-num  { background: #7c3aed; color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 0.72rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    /* Scripture sections */
+    .fc-srm-sec-scripture  { background: rgba(124,58,237,0.06); border-left: 3px solid #7c3aed; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+    .fc-srm-sec-scripture .fc-srm-sec-label { color: #7c3aed; }
+    /* Prayer sections */
+    .fc-srm-sec-prayer     { background: rgba(14,165,233,0.06); border-left: 3px solid #0ea5e9; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+    .fc-srm-sec-prayer .fc-srm-sec-label { color: #0ea5e9; }
+    /* Application sections */
+    .fc-srm-sec-application { background: rgba(5,150,105,0.06); border-left: 3px solid #059669; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+    .fc-srm-sec-application .fc-srm-sec-label { color: #059669; }
+    /* Illustration sections */
+    .fc-srm-sec-illustration { background: rgba(0,0,0,0.03); border-left: 3px solid #9ca3af; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+    .fc-srm-sec-illustration .fc-srm-sec-label { color: #6b7280; }
+    /* Altar call */
+    .fc-srm-sec-altar { background: rgba(244,63,94,0.07); border-left: 3px solid #f43f5e; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+    .fc-srm-sec-altar .fc-srm-sec-label { color: #f43f5e; }
+    /* Tags */
+    .fc-srm-tags       { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .fc-srm-tag        { background: rgba(124,58,237,0.08); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); border-radius: 20px; font-size: 0.72rem; font-weight: 600; padding: 2px 10px; }
+    /* Action buttons */
+    .fc-srm-actions    { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .fc-srm-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: none; transition: opacity 0.15s; }
+    .fc-srm-action-btn:hover { opacity: 0.85; }
+    .fc-srm-slides-btn  { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; }
+    .fc-srm-journal-btn { background: rgba(124,58,237,0.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,0.3) !important; }
+    .fc-srm-collapse-btn { background: none; border: none; color: var(--fc-text-muted, #9ca3af); font-size: 0.78rem; cursor: pointer; padding: 4px 0 0; align-self: flex-start; }
+    .fc-srm-collapse-btn:hover { color: var(--fc-text-muted, #6b7280); }
+
+    /* ─── Sermon Slides Modal ───────────────────────────────────────── */
+    #fc-srm-slides-modal { display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; }
+    .fc-srm-slide-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); }
+    .fc-srm-slide-box     { position: relative; z-index: 1; width: min(660px, 94vw); max-height: 90vh; background: var(--fc-surface, #fff); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.35); }
+    .fc-srm-slide-topbar  { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+    .fc-srm-slide-counter { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.85); letter-spacing: 0.05em; }
+    .fc-srm-slide-close   { background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 1.3rem; line-height: 1; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .fc-srm-slide-close:hover { background: rgba(255,255,255,0.35); }
+    .fc-srm-slide-stage   { flex: 1; overflow-y: auto; padding: 32px 36px; display: flex; flex-direction: column; gap: 14px; min-height: 200px; background: var(--fc-bg, #f9fafb); }
+    .fc-srm-slide-heading { font-size: 1rem; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.06em; }
+    .fc-srm-slide-text    { font-size: 1.25rem; font-weight: 600; color: var(--fc-text); line-height: 1.55; }
+    /* Slide type variations */
+    .fc-srm-slide-title   { background: linear-gradient(160deg, #f5f3ff, #ede9fe); align-items: center; text-align: center; }
+    .fc-srm-slide-title .fc-srm-slide-text { font-size: 1.5rem; font-weight: 800; color: #4c1d95; }
+    .fc-srm-slide-series  { background: linear-gradient(160deg, #f5f3ff, #ede9fe); align-items: center; text-align: center; }
+    .fc-srm-slide-series .fc-srm-slide-text { color: #6d28d9; }
+    .fc-srm-slide-scripture { background: rgba(124,58,237,0.06); border-left: 4px solid #7c3aed; }
+    .fc-srm-slide-scripture .fc-srm-slide-heading { color: #7c3aed; }
+    .fc-srm-slide-prayer  { background: rgba(14,165,233,0.06); }
+    .fc-srm-slide-prayer .fc-srm-slide-heading { color: #0ea5e9; }
+    .fc-srm-slide-application { background: rgba(5,150,105,0.06); }
+    .fc-srm-slide-application .fc-srm-slide-heading { color: #059669; }
+    .fc-srm-slide-altar   { background: rgba(244,63,94,0.06); }
+    .fc-srm-slide-altar .fc-srm-slide-heading { color: #f43f5e; }
+    .fc-srm-slide-nav     { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--fc-divider); background: var(--fc-surface, #fff); gap: 12px; }
+    .fc-srm-slide-nav-btn { background: rgba(124,58,237,0.1); border: none; color: #7c3aed; font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
+    .fc-srm-slide-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .fc-srm-slide-nav-btn:not(:disabled):hover { background: rgba(124,58,237,0.2); }
+    .fc-srm-slide-dots    { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; flex: 1; overflow: hidden; }
+    .fc-srm-slide-dot     { width: 7px; height: 7px; border-radius: 50%; background: var(--fc-divider); cursor: pointer; flex-shrink: 0; transition: background 0.15s; }
+    .fc-srm-slide-dot.active { background: #7c3aed; }
+
+    /* ─── Sanctuary Hub ──────────────────────────────────────────────── */
+    .fc-sanctuary { display: flex; flex-direction: column; height: 100%; }
+    .fc-sct-tabs  { display: flex; gap: 4px; padding: 12px 16px 0; border-bottom: 1px solid var(--fc-divider); flex-shrink: 0; overflow-x: auto; }
+    .fc-sct-tab   { background: none; border: none; cursor: pointer; padding: 8px 14px; border-radius: 10px 10px 0 0; font-size: 0.875rem; font-weight: 500; color: var(--fc-text-muted, #6b7280); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+    .fc-sct-tab.active { color: #d97706; border-bottom-color: #d97706; font-weight: 600; }
+    .fc-sct-pane  { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    .fc-sct-section { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .fc-sct-compose { background: var(--fc-surface); border-radius: 16px; border: 1px solid var(--fc-divider); overflow: hidden; }
+    .fc-sct-compose-text { width: 100%; box-sizing: border-box; background: none; border: none; resize: none; outline: none; padding: 14px 16px; font-size: 0.9375rem; line-height: 1.55; color: var(--fc-text); font-family: inherit; min-height: 90px; }
+    .fc-sct-compose-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 12px; border-top: 1px solid var(--fc-divider); }
+    .fc-sct-priv-label { display: flex; align-items: center; gap: 7px; font-size: 0.825rem; color: var(--fc-text-muted, #6b7280); cursor: pointer; }
+    .fc-sct-save-btn { background: #d97706; color: #fff; border: none; border-radius: 10px; padding: 7px 18px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .fc-sct-save-btn:hover:not(:disabled) { opacity: 0.88; }
+    .fc-sct-save-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .fc-sct-list   { display: flex; flex-direction: column; gap: 10px; }
+    .fc-sct-empty  { text-align: center; color: var(--fc-text-muted, #6b7280); font-size: 0.875rem; padding: 24px 16px; }
+    .fc-sct-entry  { background: var(--fc-surface); border-radius: 14px; border: 1px solid var(--fc-divider); padding: 13px 15px; }
+    .fc-sct-entry-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .fc-sct-entry-date { font-size: 0.775rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-badge  { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.02em; }
+    .fc-sct-badge.private   { background: rgba(120,53,15,0.15); color: #d97706; }
+    .fc-sct-badge.shared    { background: rgba(6,182,212,0.12); color: #06b6d4; }
+    .fc-sct-badge.published { background: rgba(5,150,105,0.15); color: #10b981; }
+    .fc-sct-entry-del  { margin-left: auto; background: none; border: none; cursor: pointer; color: transparent; padding: 3px; border-radius: 6px; transition: color 0.15s; }
+    .fc-sct-entry:hover .fc-sct-entry-del  { color: #f43f5e; }
+    .fc-sct-entry-edit { background: none; border: none; cursor: pointer; color: transparent; padding: 3px; border-radius: 6px; transition: color 0.15s; }
+    .fc-sct-entry:hover .fc-sct-entry-edit { color: #d97706; }
+    .fc-sct-entry-title { font-size: 0.9rem; font-weight: 600; color: var(--fc-text); margin-bottom: 4px; }
+    .fc-sct-entry-text  { font-size: 0.9rem; line-height: 1.6; color: var(--fc-text); white-space: pre-wrap; }
+    .fc-sct-edit-block  { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+    .fc-sct-edit-area   { width: 100%; box-sizing: border-box; background: var(--fc-bg, #f9fafb); border: 1px solid var(--fc-divider); border-radius: 10px; padding: 10px 12px; font-size: 0.9rem; line-height: 1.6; color: var(--fc-text); font-family: inherit; resize: vertical; outline: none; }
+    .fc-sct-edit-area:focus { border-color: #d97706; }
+    .fc-sct-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .fc-sct-edit-cancel { background: none; border: 1px solid var(--fc-divider); border-radius: 8px; padding: 5px 14px; font-size: 0.825rem; color: var(--fc-text-muted, #6b7280); cursor: pointer; }
+    .fc-sct-edit-save   { background: #d97706; color: #fff; border: none; border-radius: 8px; padding: 5px 14px; font-size: 0.825rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .fc-sct-edit-save:disabled { opacity: 0.5; cursor: default; }
+    /* Share row (under entry meta) */
+    .fc-sct-entry-share-row { margin: 4px 0 6px; }
+    /* Delete confirmation inline */
+    .fc-sct-del-confirm { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; }
+    .fc-sct-del-label { font-size: 0.78rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-del-yes { background: #f43f5e; color: #fff; border: none; border-radius: 6px; padding: 2px 9px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .fc-sct-del-no  { background: none; border: 1px solid var(--fc-divider); border-radius: 6px; padding: 2px 9px; font-size: 0.78rem; cursor: pointer; color: var(--fc-text-muted, #6b7280); }
+    /* Pagination */
+    .fc-sct-list-header { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 4px; margin-bottom: 2px; }
+    .fc-sct-list-count  { font-size: 0.82rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-per-page    { display: flex; align-items: center; gap: 5px; font-size: 0.82rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-per-page-sel { background: var(--fc-bg, #f9fafb); border: 1px solid var(--fc-divider); border-radius: 6px; padding: 2px 6px; font-size: 0.82rem; color: var(--fc-text); cursor: pointer; }
+    .fc-sct-pagination  { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 0 4px; }
+    .fc-sct-pg-btn      { background: none; border: 1px solid var(--fc-divider); border-radius: 8px; padding: 4px 14px; font-size: 0.82rem; cursor: pointer; color: var(--fc-text); transition: background 0.12s; }
+    .fc-sct-pg-btn:disabled { opacity: 0.35; cursor: default; }
+    .fc-sct-pg-btn:not(:disabled):hover { background: var(--fc-hover, rgba(0,0,0,0.05)); }
+    .fc-sct-pg-info     { font-size: 0.82rem; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-publish-btn { background: rgba(6,182,212,0.12); color: #06b6d4; border: 1px solid rgba(6,182,212,0.3); border-radius: 20px; padding: 3px 10px; font-size: 0.775rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .fc-sct-publish-btn:hover { background: rgba(6,182,212,0.22); }
+
+    /* Today's Word — chat bubble feed */
+    .fc-sct-word-feed    { display: flex; flex-direction: column; gap: 0; padding: 0 0 8px; }
+    .fc-sct-day-sep      { text-align: center; font-size: 0.72rem; font-weight: 600; color: var(--fc-text-muted, #6b7280); text-transform: uppercase; letter-spacing: 0.06em; margin: 18px 0 10px; }
+    .fc-sct-word-msg     { display: flex; align-items: flex-start; gap: 10px; padding: 0 4px 14px; }
+    .fc-sct-word-avatar  { width: 36px; height: 36px; flex-shrink: 0; background: linear-gradient(135deg, #d97706, #b45309); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; margin-top: 2px; }
+    .fc-sct-word-bubble  { background: var(--fc-received-bg, #f3f4f6); border-radius: 18px 18px 18px 4px; padding: 14px 16px; max-width: calc(100% - 52px); box-shadow: 0 1px 3px rgba(0,0,0,0.07); display: flex; flex-direction: column; gap: 10px; }
+    .fc-sct-word-today .fc-sct-word-bubble { border: 1.5px solid rgba(217,119,6,0.25); }
+    .fc-sct-word-bubble-sender { font-size: 0.72rem; font-weight: 700; color: #d97706; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: -4px; }
+    .fc-sct-word-bubble-title  { font-size: 1.05rem; font-weight: 700; color: var(--fc-text); line-height: 1.3; }
+    .fc-sct-word-bubble-theme  { font-size: 0.82rem; color: #d97706; font-style: italic; margin-top: -4px; }
+    .fc-sct-word-bubble-scripture { background: rgba(120,53,15,0.08); border-left: 3px solid #d97706; padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: 0.875rem; font-style: italic; color: var(--fc-text); line-height: 1.6; }
+    .fc-sct-word-bubble-section  { display: flex; flex-direction: column; gap: 4px; }
+    .fc-sct-word-bubble-label    { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fc-text-muted, #6b7280); }
+    .fc-sct-word-bubble-section p { margin: 0; font-size: 0.9rem; line-height: 1.65; color: var(--fc-text); }
+    .fc-sct-word-bubble-q .fc-sct-word-bubble-label { color: #7c3aed; }
+    .fc-sct-word-bubble-p .fc-sct-word-bubble-label { color: #0891b2; }
+    .fc-sct-word-bubble-p { background: rgba(8,145,178,0.06); border-radius: 10px; padding: 10px 12px; }
+    .fc-sct-word-footer  { text-align: center; padding: 8px 0 4px; }
+
+    /* Bubble action row: Complete + Add Note */
+    .fc-sct-bubble-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .fc-sct-complete-btn   { flex: 1; min-width: 120px; padding: 7px 14px; border-radius: 20px; border: 1.5px solid #d97706; background: transparent; color: #d97706; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .fc-sct-complete-btn:hover:not(.done) { background: rgba(217,119,6,0.1); }
+    .fc-sct-complete-btn.done  { background: #d97706; color: #fff; border-color: #d97706; cursor: default; }
+    .fc-sct-complete-read      { border-color: #0ea5e9; color: #0ea5e9; }
+    .fc-sct-complete-read:hover:not(.done) { background: rgba(14,165,233,0.08); }
+    .fc-sct-complete-read.done { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+    .fc-sct-reply-btn      { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--fc-divider); background: transparent; color: var(--fc-text-muted, #6b7280); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .fc-sct-reply-btn:hover { background: rgba(0,0,0,0.05); }
+
+    /* Inline reply block */
+    .fc-sct-reply-block    { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .fc-sct-reply-area     { width: 100%; border-radius: 12px; border: 1.5px solid var(--fc-divider); padding: 10px 12px; font-size: 0.9rem; line-height: 1.5; color: var(--fc-text); background: var(--fc-bg); resize: vertical; font-family: inherit; box-sizing: border-box; }
+    .fc-sct-reply-area:focus { outline: none; border-color: #d97706; }
+    .fc-sct-reply-actions  { display: flex; gap: 8px; justify-content: flex-end; }
+    .fc-sct-reply-save     { padding: 6px 16px; border-radius: 16px; background: #d97706; color: #fff; border: none; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .fc-sct-reply-save:disabled { opacity: 0.6; cursor: default; }
+    .fc-sct-reply-cancel   { padding: 6px 14px; border-radius: 16px; background: transparent; color: var(--fc-text-muted, #6b7280); border: 1px solid var(--fc-divider); font-size: 0.82rem; cursor: pointer; }
+    .fc-sct-word-empty   { text-align: center; padding: 32px 16px; }
+    .fc-sct-word-icon    { margin-bottom: 12px; }
+    .fc-sct-word-empty p { color: var(--fc-text-muted, #6b7280); font-size: 0.9rem; }
+
+    .fc-sct-passages      { display: flex; flex-direction: column; gap: 8px; }
+    .fc-sct-passage       { background: rgba(0,0,0,0.03); border-radius: 10px; border-left: 4px solid #06b6d4; padding: 10px 12px; }
+    .fc-sct-passage-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #06b6d4; margin-bottom: 3px; }
+    .fc-sct-passage-ref   { font-size: 0.95rem; font-weight: 600; color: var(--fc-text); }
+    .fc-sct-read-ot { border-left-color: #7c3aed; } .fc-sct-read-ot .fc-sct-passage-label { color: #7c3aed; }
+    .fc-sct-read-nt { border-left-color: #0ea5e9; } .fc-sct-read-nt .fc-sct-passage-label { color: #0ea5e9; }
+    .fc-sct-read-ps { border-left-color: #059669; } .fc-sct-read-ps .fc-sct-passage-label { color: #059669; }
+    .fc-sct-read-pr { border-left-color: #d97706; } .fc-sct-read-pr .fc-sct-passage-label { color: #d97706; }
+    .fc-sct-read-avatar { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+    .fc-sct-grow-link     { display: inline-block; font-size: 0.825rem; color: #d97706; text-decoration: none; font-weight: 500; margin-top: 4px; }
+    .fc-sct-grow-link:hover { text-decoration: underline; }
+
+    /* ─── Info Card List (thread body) ──────────────────────────────── */
+    .fc-info-list {
+      padding: 16px 12px 32px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .fc-info-card {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--fc-surface);
+      border: 1px solid var(--fc-divider);
+      border-radius: 16px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fc-info-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .fc-info-card:active { transform: scale(0.985); }
+    .fc-info-card-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: rgba(6,182,212,0.1); border-radius: 12px;
+    }
+    .fc-info-card-icon svg { display: block; }
+    .fc-info-card-body { flex: 1; min-width: 0; }
+    .fc-info-card-title {
+      font-size: 0.9375rem; font-weight: 600;
+      color: var(--fc-text); margin-bottom: 3px;
+    }
+    .fc-info-card-preview {
+      font-size: 0.8125rem; color: var(--fc-text-muted, #6b7280);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .fc-info-card-arrow {
+      font-size: 1.5rem; color: var(--fc-text-muted, #6b7280);
+      flex-shrink: 0; line-height: 1;
+    }
+
+    /* ─── Info Modal ─────────────────────────────────────────────────── */
+    .fc-info-modal {
+      position: absolute; inset: 0; z-index: 300;
+      background: var(--fc-bg);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .fc-info-modal[hidden] { display: none; }
+    .fc-info-modal-header {
+      display: flex; align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--fc-divider);
+      flex-shrink: 0;
+    }
+    .fc-info-modal-back {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      color: #06b6d4; font-size: 0.9375rem; font-weight: 500;
+      padding: 4px 8px; border-radius: 8px;
+    }
+    .fc-info-modal-back:hover { background: rgba(6,182,212,0.1); }
+    .fc-info-modal-content {
+      flex: 1; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 20px 48px;
+    }
+    .fc-info-modal-title {
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--fc-text); margin-bottom: 8px; line-height: 1.3;
+    }
+    .fc-info-modal-subtitle {
+      font-size: 0.9rem; color: var(--fc-text-muted, #6b7280);
+      margin-bottom: 20px; line-height: 1.5;
+      padding-bottom: 16px; border-bottom: 1px solid var(--fc-divider);
+    }
+    /* Rich content typography inside modal */
+    .fc-info-modal-body p {
+      font-size: 0.9375rem; line-height: 1.65;
+      color: var(--fc-text); margin-bottom: 14px;
+    }
+    .fc-info-modal-body h3 {
+      font-size: 1rem; font-weight: 700;
+      color: var(--fc-text); margin: 20px 0 8px;
+    }
+    .fc-info-modal-body ul {
+      margin: 0 0 14px 0; padding-left: 0;
+      list-style: none;
+    }
+    .fc-info-modal-body li {
+      font-size: 0.9125rem; line-height: 1.55;
+      color: var(--fc-text); padding: 6px 0 6px 22px;
+      border-bottom: 1px solid var(--fc-divider);
+      position: relative;
+    }
+    .fc-info-modal-body li::before {
+      content: '›'; position: absolute; left: 6px;
+      color: #06b6d4; font-weight: 700; font-size: 1rem;
+    }
+    .fc-info-modal-body li:last-child { border-bottom: none; }
+    .fc-info-modal-body strong { color: var(--fc-text); font-weight: 600; }
+    .fc-info-modal-body code {
+      font-family: monospace; font-size: 0.85em;
+      background: var(--fc-surface); border-radius: 4px;
+      padding: 1px 5px; color: #06b6d4;
+    }
+    /* Admin delete button on messages */
+    .fc-msg-admin-del {
+      background: none; border: none; cursor: pointer;
+      color: transparent; padding: 2px 4px;
+      border-radius: 4px; font-size: 0.875rem;
+      transition: color 0.15s;
+      flex-shrink: 0; align-self: flex-end;
+    }
+    .fc-message:hover .fc-msg-admin-del,
+    .fc-card:hover .fc-msg-admin-del { color: #f43f5e; }
+    .fc-msg-admin-del:hover { background: rgba(244,63,94,0.1); }
+
+    /* ─── Message List ───────────────────────────────────────────────── */
+    .fc-messages {
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .fc-messages::-webkit-scrollbar { width: 0; }
+
+    /* ─── Message Bubble (iMessage style) ────────────────────────────── */
+    .fc-message {
+      display: flex;
+      gap: 10px;
+      max-width: 70%;
+      animation: fc-message-in 0.2s ease;
+    }
+    @keyframes fc-message-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Received messages (left-aligned, gray) */
+    .fc-message.received {
+      align-self: flex-start;
+    }
+    .fc-message.received .fc-bubble {
+      background: var(--fc-received-bg);
+      color: var(--fc-received-text);
+      border-radius: 18px 18px 18px 4px;
+    }
+
+    /* Sent messages (right-aligned, blue) */
+    .fc-message.sent {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .fc-message.sent .fc-bubble {
+      background: var(--fc-sent-bg);
+      color: var(--fc-sent-text);
+      border-radius: 18px 18px 4px 18px;
+    }
+
+    .fc-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    .fc-message.sent .fc-avatar {
+      display: none;
+    }
+
+    .fc-bubble {
+      padding: 12px 16px;
+      box-shadow: var(--fc-shadow-sm);
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .fc-message-author {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+    .fc-message.sent .fc-message-author {
+      display: none;
+    }
+
+    .fc-message-text {
+      font-size: 0.9375rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .fc-message-time {
+      font-size: 0.6875rem;
+      opacity: 0.65;
+      margin-top: 4px;
+      text-align: right;
+    }
+    .fc-message.received .fc-message-time {
+      text-align: left;
+    }
+
+    /* ─── Message Reactions ───────────────────────────────────────────── */
+    .fc-reactions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 4px;
+      padding: 0 12px;
+    }
+    .fc-reaction-bubble {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .fc-reaction-bubble:hover {
+      background: var(--hover);
+      transform: scale(1.05);
+    }
+    .fc-reaction-bubble.active {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(59, 130, 246, 0.15));
+      border-color: #3b82f6;
+      font-weight: 600;
+    }
+    .fc-reaction-add {
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      margin-top: 4px;
+    }
+    .fc-reaction-add-btn {
+      padding: 4px 8px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: all 0.2s;
+    }
+    .fc-reaction-add-btn:hover {
+      opacity: 1;
+      background: var(--hover);
+      border-style: solid;
+    }
+    .fc-reaction-picker {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      margin-bottom: 8px;
+    }
+    .fc-reaction-picker-btn {
+      padding: 6px;
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .fc-reaction-picker-btn:hover {
+      background: var(--hover);
+      transform: scale(1.2);
+    }
+
+    /* ─── Prayer/Announcement Cards ──────────────────────────────────── */
+    .fc-card {
+      align-self: stretch;
+      max-width: 85%;
+      background: var(--fc-surface);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--fc-shadow-md);
+      border-left: 4px solid var(--fc-prayer);
+    }
+    .fc-card.announcement {
+      border-left-color: var(--fc-announcement);
+    }
+
+    .fc-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .fc-card-icon {
+      font-size: 1.25rem;
+    }
+    .fc-card-author {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fc-text);
+    }
+    .fc-card-time {
+      font-size: 0.75rem;
+      color: var(--fc-text-muted);
+      margin-left: auto;
+    }
+
+    .fc-card-text {
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: var(--fc-text);
+      margin-bottom: 12px;
+    }
+
+    .fc-card-btn {
+      padding: 8px 14px;
+      background: var(--fc-panel);
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fc-prayer);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .fc-card-btn:hover {
+      background: var(--fc-divider);
+    }
+    .fc-card.announcement .fc-card-btn {
+      color: var(--fc-announcement);
+    }
+
+    /* ─── Composer (bottom input) ────────────────────────────────────── */
+    .fc-composer {
+      background: var(--fc-surface);
+      border-top: 1px solid var(--fc-divider);
+      padding: 14px 20px calc(14px + var(--safe-bottom));
+      display: flex;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .fc-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .fc-input {
+      width: 100%;
+      min-height: 40px;
+      max-height: 120px;
+      padding: 10px 14px;
+      background: var(--fc-panel);
+      border: 1px solid transparent;
+      border-radius: 20px;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      color: var(--fc-text);
+      outline: none;
+      resize: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .fc-input:focus {
+      background: var(--fc-surface);
+      border-color: var(--fc-sent-bg);
+    }
+    .fc-input::placeholder {
+      color: var(--fc-text-light);
+    }
+
+    .fc-send-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--fc-sent-bg);
+      border: none;
+      color: white;
+      font-size: 1.125rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.12s, opacity 0.12s;
+      opacity: 0.5;
+    }
+    .fc-send-btn:not(:disabled):hover {
+      transform: scale(1.05);
+    }
+    .fc-send-btn:not(:disabled) {
+      opacity: 1;
+    }
+    .fc-send-btn:disabled {
+      cursor: not-allowed;
+    }
+
+    /* ─── Mobile Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .fc-list-pane {
+        width: 100%;
+        border-right: none;
+      }
+      .fc-thread-pane {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+      }
+      .fc-thread-pane.active {
+        transform: translateX(0);
+      }
+      .fc-thread-header {
+        padding-top: calc(14px + var(--safe-top));
+      }
+      .fc-back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: none;
+        border: none;
+        color: var(--fc-sent-bg);
+        font-size: 1.25rem;
+        cursor: pointer;
+        margin-left: -8px;
+      }
+      .fc-message {
+        max-width: 85%;
+      }
+    }
+    @media (min-width: 769px) {
+      .fc-back-btn {
+        display: none;
+      }
+    }
+
+    /* ─── Loading Spinner ────────────────────────────────────────────── */
+    .fc-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .fc-spinner {
+      width: 28px; height: 28px;
+      border: 2.5px solid var(--fc-border);
+      border-top-color: var(--fc-sent-bg);
+      border-radius: 50%;
+      animation: fc-spin 0.8s linear infinite;
+    }
+
+    /* ─── Toast Notifications ────────────────────────────────────────── */
+    #fc-toasts {
+      position: fixed;
+      top: calc(var(--safe-top) + 20px);
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .fc-toast {
+      padding: 14px 18px;
+      background: var(--fc-surface);
+      border: 1px solid var(--fc-border);
+      border-radius: 12px;
+      box-shadow: var(--fc-shadow-lg);
+      font-size: 0.875rem;
+      color: var(--fc-text);
+      opacity: 0;
+      transform: translateX(100px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: all;
+      max-width: 320px;
+    }
+    .fc-toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .fc-toast.error {
+      border-color: #dc2626;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+    .fc-toast.success {
+      border-color: #059669;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    /* ─── New Conversation Modal ─────────────────────────────────────── */
+    .fc-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .fc-modal-backdrop.show {
+      opacity: 1;
+    }
+    .fc-modal {
+      background: var(--fc-surface);
+      border-radius: 14px;
+      box-shadow: var(--fc-shadow-lg);
+      width: 90%;
+      max-width: 480px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+    .fc-modal-backdrop.show .fc-modal {
+      transform: scale(1);
+    }
+    .fc-modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--fc-divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .fc-modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--fc-text);
+    }
+    .fc-modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: none;
+      border: none;
+      color: var(--fc-text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.12s;
+    }
+    .fc-modal-close:hover {
+      background: var(--fc-panel);
+    }
+    .fc-modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .fc-modal-search {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--fc-panel);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      color: var(--fc-text);
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+    .fc-modal-search:focus {
+      background: var(--fc-surface);
+      border-color: var(--fc-sent-bg);
+    }
+    .fc-user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .fc-user-item:hover {
+      background: var(--fc-panel);
+    }
+    .fc-user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .fc-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .fc-user-name {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--fc-text);
+    }
+    .fc-user-email {
+      font-size: 0.8125rem;
+      color: var(--fc-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Boot Splash -->
+  <div id="fc-boot">
+    <div class="fc-boot-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="fc-boot-name">FlockChat</div>
+    <div class="fc-boot-spinner"></div>
+    <div class="fc-boot-status" id="fc-boot-status">Connecting…</div>
+  </div>
+
+  <!-- App -->
+  <div id="fc-app" hidden>
+    
+    <!-- Unity Header (mounted by JS) -->
+    <header id="fc-topbar" class="unity-header" role="banner"></header>
+
+    <!-- Main Container -->
+    <div class="fc-container">
+      
+      <!-- Conversation List -->
+      <div class="fc-list-pane">
+        <div class="fc-list-header">
+          <div class="fc-list-title-row">
+            <h1 class="fc-list-title">Messages</h1>
+            <button class="fc-new-btn" id="fc-new-btn" title="New Conversation">✎</button>
+          </div>
+          <input type="text" class="fc-list-search" placeholder="Search conversations..." id="fc-search">
+        </div>
+        <div class="fc-list-scroll" id="fc-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Message Thread -->
+      <div class="fc-thread-pane" id="fc-thread">
+        <div class="fc-thread-header">
+          <button class="fc-back-btn" id="fc-back">←</button>
+          <div class="fc-thread-icon" id="fc-thread-icon">👥</div>
+          <div class="fc-thread-info">
+            <div class="fc-thread-name" id="fc-thread-name">Select a conversation</div>
+            <div class="fc-thread-meta" id="fc-thread-meta"></div>
+          </div>
+          <!-- Admin-only channel management button -->
+          <button class="fc-manage-btn" id="fc-manage-btn" hidden
+                  onclick="window._openChannelManager()" title="Manage channel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="fc-messages" id="fc-messages">
+          <!-- Messages populated by JS -->
+        </div>
+        <div class="fc-composer">
+          <div class="fc-input-wrap">
+            <textarea class="fc-input" id="fc-input" placeholder="FlockChat" rows="1"></textarea>
+          </div>
+          <button class="fc-send-btn" id="fc-send" disabled>↑</button>
+        </div>
+
+        <!-- Channel Manager Drawer (admin only) -->
+        <div class="fc-mgr-overlay" id="fc-mgr-overlay" hidden
+             onclick="window._closeChannelManager()"></div>
+        <div class="fc-mgr-drawer" id="fc-mgr-drawer" hidden>
+          <div class="fc-mgr-header">
+            <div class="fc-mgr-title" id="fc-mgr-title">Manage Channel</div>
+            <button class="fc-mgr-close" onclick="window._closeChannelManager()">✕</button>
+          </div>
+          <div class="fc-mgr-body" id="fc-mgr-body">
+            <div class="fc-loading"><div class="fc-spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Info Modal (full-screen read-only guide) -->
+        <div class="fc-info-modal" id="fc-info-modal" hidden>
+          <div class="fc-info-modal-header">
+            <button class="fc-info-modal-back" onclick="window._closeInfoModal()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+              Back
+            </button>
+          </div>
+          <div class="fc-info-modal-content">
+            <div class="fc-info-modal-title" id="fc-info-modal-title"></div>
+            <div class="fc-info-modal-subtitle" id="fc-info-modal-subtitle"></div>
+            <div class="fc-info-modal-body" id="fc-info-modal-body"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Unity Footer removed -->
+
+
+  </div>
+
+  <!-- Toast Container -->
+  <div id="fc-toasts" aria-live="polite"></div>
+
+  <!-- New Conversation Modal -->
+  <div class="fc-modal-backdrop" id="fc-new-modal" hidden>
+    <div class="fc-modal">
+      <div class="fc-modal-header">
+        <h2 class="fc-modal-title">New Conversation</h2>
+        <button class="fc-modal-close" id="fc-modal-close">&times;</button>
+      </div>
+      <div class="fc-modal-body">
+        <input type="text" class="fc-modal-search" id="fc-user-search" placeholder="Search members...">
+        <div id="fc-user-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FCM VAPID key is stored in Firestore: settings/notifications → { vapidKey: "B..." }
+       Get from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+       This keeps the key out of source control and makes it per-church configurable. -->
+
+  <!-- Firebase Config -->
+  <script>
+        window.FLOCK_FIREBASE_CONFIG = {
+      apiKey:  'AIzaSyDIJD_nOWkIWTwtFgNrfwTSr8BjAWDxKtQ',
+      authDomain:  'flockos-trinity.firebaseapp.com',
+      projectId:  'flockos-trinity',
+      storageBucket:  'flockos-trinity.firebasestorage.app',
+      messagingSenderId:  '1068495552013',
+      appId:  '1:1068495552013:web:36b868b29367cf65d45f44',
+      measurementId:  'G-E7KXEN8C3E',
+    };
+  </script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+
+  <!-- Core scripts -->
+  <script defer src="Scripts/firm_foundation.js"></script>
+  <script defer src="Scripts/the_upper_room.js"></script>
+  <script defer src="Scripts/the_true_vine.js"></script>
+
+  <!-- Unity header -->
+  <script type="module">
+    import { mountUnityHeader } from './Scripts/the_unity_header.js';
+    
+    window.addEventListener('load', () => {
+      mountUnityHeader(document.getElementById('fc-topbar'), {
+        appId: 'flockchat',
+        appName: 'FlockChat',
+        appIconSvg: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        appAccent: '#06b6d4',
+        appAccentDk: '#0c4a6e',
+        homeHref: 'app.flockchat/',
+        hideHamburger: true,  // FlockChat doesn't use sidebar
+        features: [
+          { id: 'fc-conversations', label: 'All Conversations', hint: 'Browse all channels', run: () => document.getElementById('fc-back-btn')?.click() },
+          { id: 'fc-announcements', label: 'Announcements',     hint: 'Church announcements', run: () => window._openConversation?.('announcements') },
+          { id: 'fc-prayer',        label: 'Prayer Chain',      hint: 'Church prayer requests', run: () => window._openConversation?.('prayer') },
+        ],
+      });
+    });
+  </script>
+
+  <!-- FlockChat v3 logic -->
+  <script defer src="app.flockchat/flockchat.js"></script>
+
+  <!-- Auto-linkify scripture references → bible.com ESV (same as GROW) -->
+  <script type="module">
+    import { installScriptureLinks } from '../Scripts/the_scrolls/the_bible_link.js';
+    installScriptureLinks(document.body);
+  </script>
+
+</body>
+</html>

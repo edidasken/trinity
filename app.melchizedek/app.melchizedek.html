@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- base: resolves all relative resource paths from the parent New_Covenant/ folder -->
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+  <title>Melchizedek — Background Checks</title>
+
+  <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href="Images/icon-melchizedek.svg">
+  <link rel="apple-touch-icon" href="Images/icon-melchizedek.svg">
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="app.melchizedek/manifest.json">
+
+  <!-- PWA meta -->
+  <meta name="theme-color" content="#1b264f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Melchizedek">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- SEO -->
+  <meta name="description" content="Melchizedek by FlockOS — secure background check management for church leadership. Powered by Checkr.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Firebase preconnect -->
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://securetoken.googleapis.com">
+
+  <!-- Flash prevention: apply saved FlockOS theme before first paint -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('flock_theme') || 'america';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'america');
+      }
+    })();
+  </script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="Styles/new_covenant.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* Boot splash */
+    #melch-boot {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--bg, #0e1628); gap: 14px;
+    }
+    #melch-boot .boot-icon { width: 52px; height: 52px; opacity: 0.85; }
+    #melch-boot .boot-label {
+      font: 700 0.72rem/1 var(--font-ui, 'Plus Jakarta Sans', sans-serif);
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold, #e8a838); opacity: 0.7;
+    }
+    #melch-boot .boot-sub {
+      font: 400 0.78rem/1 var(--font-ui, 'Plus Jakarta Sans', sans-serif);
+      color: var(--ink-muted, #7a7f96);
+    }
+
+    /* Unity header — must span full grid width inside veil-wrap */
+    .veil-wrap > .unity-header { grid-area: top !important; }
+
+    /* Pull-to-refresh */
+    .ptr-indicator {
+      position: sticky; top: 0; z-index: 100;
+      text-align: center; padding: 8px;
+      font: 600 0.78rem var(--font-ui, sans-serif);
+      color: var(--gold, #e8a838); background: var(--bg, #0e1628);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .ptr-indicator.visible { opacity: 1; }
+  </style>
+</head>
+<body class="veil-app">
+
+  <!-- Boot splash -->
+  <div id="melch-boot">
+    <svg class="boot-icon" viewBox="0 0 24 24" fill="none" stroke="var(--gold,#d4a843)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/>
+      <polyline points="9,12 11,14 15,10"/>
+    </svg>
+    <div class="boot-label">Melchizedek</div>
+    <div class="boot-sub">Background Checks</div>
+  </div>
+
+  <!-- App root -->
+  <div id="melch-app" hidden>
+    <div class="veil-wrap">
+
+      <!-- Unity Header -->
+      <header class="unity-header" id="melch-topbar" role="banner"></header>
+
+      <!-- Sidebar -->
+      <nav id="the-veil-side" class="veil-side" aria-label="Navigation">
+        <button class="pillars-item is-active" data-melch-view="overview" aria-current="page">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </span>
+          <span class="pillars-label">Overview</span>
+        </button>
+        <button class="pillars-item" data-melch-view="members">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="pillars-label">All Members</span>
+        </button>
+        <button class="pillars-item" data-melch-view="pending">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          </span>
+          <span class="pillars-label">Pending</span>
+        </button>
+        <button class="pillars-item" data-melch-view="approved">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/><polyline points="9,12 11,14 15,10"/></svg>
+          </span>
+          <span class="pillars-label">Approved</span>
+        </button>
+        <button class="pillars-item" data-melch-view="not-approved">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/><line x1="10" y1="10" x2="14" y2="14"/><line x1="14" y1="10" x2="10" y2="14"/></svg>
+          </span>
+          <span class="pillars-label">Not Approved</span>
+        </button>
+        <button class="pillars-item" data-melch-view="compliance">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          <span class="pillars-label">Compliance</span>
+        </button>
+        <button class="pillars-item" data-melch-view="about" style="margin-top:auto">
+          <span class="pillars-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>
+          <span class="pillars-label">About</span>
+        </button>
+      </nav>
+
+      <!-- Main content -->
+      <main class="veil-main" id="gp-main" tabindex="-1">
+        <div class="ptr-indicator" id="ptrIndicator">&#8635; Release to refresh</div>
+        <div id="melch-content" style="padding: 4px 0 48px;">
+          <!-- Populated by melchizedek.js -->
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- ── Firebase config — patched by B-Build per church ──────────────── -->
+  <script>
+        window.FLOCK_FIREBASE_CONFIG = {
+      apiKey:  'AIzaSyDIJD_nOWkIWTwtFgNrfwTSr8BjAWDxKtQ',
+      authDomain:  'flockos-trinity.firebaseapp.com',
+      projectId:  'flockos-trinity',
+      storageBucket:  'flockos-trinity.firebasestorage.app',
+      messagingSenderId:  '1068495552013',
+      appId:  '1:1068495552013:web:36b868b29367cf65d45f44',
+      measurementId:  'G-E7KXEN8C3E',
+    };
+  </script>
+
+  <!-- Firebase compat SDKs -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
+
+  <!-- FlockOS auth + session layer -->
+  <script defer src="Scripts/firm_foundation.js"></script>
+  <script defer src="Scripts/the_upper_room.js"></script>
+  <script defer src="Scripts/the_true_vine.js"></script>
+  <!-- App logic -->
+  <script type="module" src="app.melchizedek/melchizedek.js"></script>
+
+  <!-- Pull-to-Refresh -->
+  <script>
+  (function () {
+    if (window.innerWidth > 860) return;
+    var mainEl  = document.getElementById('gp-main');
+    var ptr     = document.getElementById('ptrIndicator');
+    if (!mainEl || !ptr) return;
+    var startY = 0, pulling = false, triggered = false;
+    mainEl.addEventListener('touchstart', function (e) {
+      if (mainEl.scrollTop > 5) return;
+      startY = e.touches[0].clientY; pulling = true; triggered = false;
+    }, { passive: true });
+    mainEl.addEventListener('touchmove', function (e) {
+      if (!pulling) return;
+      var dy = e.touches[0].clientY - startY;
+      if (dy > 60 && !triggered) { triggered = true; ptr.classList.add('visible'); }
+      else if (dy < 30) { triggered = false; ptr.classList.remove('visible'); }
+    }, { passive: true });
+    mainEl.addEventListener('touchend', function () {
+      if (triggered) { ptr.textContent = 'Refreshing…'; setTimeout(function () { location.reload(); }, 300); }
+      else { ptr.classList.remove('visible'); }
+      pulling = false; triggered = false;
+    }, { passive: true });
+  })();
+  </script>
+
+</body>
+</html>

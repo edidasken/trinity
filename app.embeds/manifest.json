@@ -1,0 +1,40 @@
+{
+  "name": "FlockOS Embeds",
+  "short_name": "FlockOS",
+  "description": "Embeddable standalone pages for the FlockOS platform — About, GROW, The Invitation, and the Flock Stand.",
+  "start_url": "./embed-about.html",
+  "id": "./embed-about.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c1445",
+  "theme_color": "#0c1445",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "lifestyle",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "../Images/icon-grow.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "../Images/GrowIcon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "../Images/FlockIcon-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

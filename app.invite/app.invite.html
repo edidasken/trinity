@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <base href="../">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="The Invitation">
+  <meta name="theme-color" content="#22c55e">
+  <meta name="description" content="A hope-filled look at Jesus Christ — His invitations, His identity, and His finished work.">
+
+  <title>The Invitation</title>
+
+  <!-- PWA Manifest — href set by script below to bypass <base href> and use actual page URL -->
+  <link rel="manifest" id="inv-manifest">
+  <script>document.getElementById('inv-manifest').href=new URL('manifest.json',location.href).href;</script>
+
+  <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href="Images/icon-invite.svg">
+  <link rel="apple-touch-icon" href="Images/icon-invite.svg">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+  <!-- Flash prevention: apply saved FlockOS theme before first paint -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('flock_theme') || 'america';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'america');
+      }
+    })();
+  </script>
+
+  <!-- One CSS file: american_garments is merged into new_covenant.css -->
+  <link rel="stylesheet" href="Styles/new_covenant.css">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      /* Inherit --gold/--gold-text from new_covenant.css; only define safe-area helpers here */
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left:   env(safe-area-inset-left, 0px);
+      --safe-right:  env(safe-area-inset-right, 0px);
+    }
+
+    html, body {
+      height: 100dvh;
+      margin: 0; padding: 0;
+      background: #0c1445; /* matches topbar so iOS status bar band is dark */
+      color: var(--ink, #1b264f);
+      font-family: var(--font-ui, 'Plus Jakarta Sans', sans-serif);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* #inv-shell contains header, nav, and scrolling main content */
+    #inv-shell {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg, #f7f8fb);
+      overflow: hidden;
+    }
+
+    /* Main content area is the scroll container */
+    #inv-main {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg, #f7f8fb);
+    }
+
+    /* ── Grow page / hero styles (extracted from new_covenant.css) ── */
+    .grow-page {
+      --text:    var(--ink, #1b264f);
+      --muted:   var(--ink-muted, #7a7f96);
+      --surface: var(--bg-raised, #ffffff);
+      --border:  var(--line, #e5e7ef);
+      display: flex; flex-direction: column; gap: 24px; padding: 0 4px 64px;
+    }
+    .grow-hero {
+      display: flex; align-items: center; gap: 18px;
+      padding: 24px 28px;
+      border: 1px solid var(--border, rgba(255,255,255,.08));
+      border-radius: 18px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--grow-accent, #475569) 14%, transparent), transparent 70%);
+      position: relative; overflow: hidden; flex-wrap: wrap;
+    }
+    @media (max-width: 480px) {
+      .grow-hero { padding: 16px 18px; gap: 12px; }
+      .grow-hero-icon { width: 44px; height: 44px; }
+      .grow-hero-title { font-size: 20px; }
+    }
+    .grow-hero::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      border-left: 4px solid var(--grow-accent, #475569);
+      border-radius: 18px 0 0 18px;
+    }
+    .grow-hero-icon {
+      width: 56px; height: 56px; flex-shrink: 0;
+      display: grid; place-items: center; border-radius: 14px;
+      background: color-mix(in srgb, var(--grow-accent, #475569) 22%, transparent);
+      color: var(--grow-accent, #fff);
+    }
+    .grow-hero-icon svg { width: 30px; height: 30px; }
+    .grow-hero-text { flex: 1; min-width: 0; }
+    .grow-hero-title { margin: 0 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -.01em; color: var(--text, #f5f5f7); }
+    .grow-hero-sub   { margin: 0; color: var(--text, #f5f5f7); opacity: .88; font-size: 14px; line-height: 1.55; max-width: 60ch; }
+
+    /* ── Topbar (handled by .unity-header in new_covenant.css) ── */
+    #inv-topbar {
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    /* ── Subbar (church attribution + share pill) ── */
+    #inv-subbar {
+      position: sticky; top: calc(56px + var(--safe-top, 0px)); z-index: 99;
+      background: var(--top-bg);
+      color: var(--top-ink);
+      padding: 7px 20px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--top-line);
+    }
+    .inv-brand-church {
+      flex: 1; min-width: 0;
+      font: 500 .82rem 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: rgba(255,255,255,.78);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .inv-share-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 13px; border-radius: 999px;
+      background: rgba(61,139,79,.25); border: 1.5px solid rgba(61,139,79,.55);
+      color: #6ee7b7; font: 600 .8rem var(--font-ui, sans-serif);
+      cursor: pointer; transition: background .18s;
+    }
+    .inv-share-pill:hover { background: rgba(61,139,79,.4); }
+
+    /* ── Scroll area ────────────────────────────────────────────── */
+    #inv-main {
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+    }
+    #inv-main > * {
+      max-width: 860px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* grow-page needs padding since we removed the GROW shell's #gp-main padding */
+    .grow-page {
+      padding: 0 20px 48px;
+    }
+    @media (min-width: 600px) {
+      .grow-page { padding: 0 28px 64px; }
+    }
+    /* Hero sits full-bleed edge to edge in the invitation */
+    [data-grow="the_gospel_invitation"] .grow-hero {
+      margin-left: -20px; margin-right: -20px;
+    }
+    @media (min-width: 600px) {
+      [data-grow="the_gospel_invitation"] .grow-hero {
+        margin-left: -28px; margin-right: -28px;
+      }
+    }
+
+    /* ── Loading state ──────────────────────────────────────────── */
+    #inv-loading {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 60vh; flex-direction: column; gap: 16px;
+      color: var(--ink-muted, #7a7f96); font: .95rem var(--font-ui, sans-serif);
+    }
+    .inv-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--line, #e5e7ef);
+      border-top-color: #3d8b4f;
+      border-radius: 50%;
+      animation: inv-spin .7s linear infinite;
+    }
+    @keyframes inv-spin { to { transform: rotate(360deg); } }
+
+    /* ── SW update banner ───────────────────────────────────────── */
+    #inv-sw-banner {
+      display: none;
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-raised); color: var(--ink); border-radius: 12px;
+      padding: 12px 20px; font: .88rem var(--font-ui, sans-serif);
+      box-shadow: 0 6px 24px rgba(12,20,69,.4);
+      z-index: 999; gap: 12px; align-items: center;
+      border: 1.5px solid rgba(61,139,79,.4);
+    }
+    #inv-sw-banner.visible { display: flex; }
+    #inv-sw-reload {
+      background: #3d8b4f; color: #fff; border: none; border-radius: 8px;
+      padding: 6px 14px; font: 600 .82rem var(--font-ui, sans-serif); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Single scroll container (kills PTR on iOS) ───────────────── -->
+  <div id="inv-shell">
+
+  <!-- ── Topbar ──────────────────────────────────────────────────── -->
+  <!-- Unity header (mounted by inline module below) -->
+  <header id="inv-topbar" class="unity-header" role="banner"></header>
+
+  <!-- Subbar: church attribution + share pill -->
+  <nav id="inv-subbar" aria-label="Invitation actions">
+    <div class="inv-brand-church" id="inv-church-name"></div>
+    <button class="inv-share-pill" id="inv-topbar-share" aria-label="Share this page">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share
+    </button>
+  </nav>
+
+  <!-- ── Content ─────────────────────────────────────────────────── -->
+  <main id="inv-main" role="main">
+    <div id="inv-loading">
+      <div class="inv-spinner"></div>
+      Loading…
+    </div>
+    <div id="inv-root"></div>
+  </main>
+
+  </div><!-- /#inv-shell -->
+
+  <!-- ── SW update banner (outside scroller — fixed positioning) ─── -->
+  <div id="inv-sw-banner" role="status" aria-live="polite">
+    New version available
+    <button id="inv-sw-reload">Refresh</button>
+  </div>
+
+  <!-- Firebase config — patched per-church by B-Build -->
+  <script>
+        window.FLOCK_FIREBASE_CONFIG = {
+      apiKey:            'AIzaSyDIJD_nOWkIWTwtFgNrfwTSr8BjAWDxKtQ',
+      authDomain:            'flockos-trinity.firebaseapp.com',
+      projectId:            'flockos-trinity',
+      storageBucket:            'flockos-trinity.firebasestorage.app',
+      messagingSenderId:            '1068495552013',
+      appId:            '1:1068495552013:web:36b868b29367cf65d45f44',
+      measurementId:            'G-E7KXEN8C3E',
+    };
+  </script>
+
+  <!-- Firebase (for church map / Come Join Us Firestore reads) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <!-- Standalone invite boot -->
+  <script>
+    /* Share URL = this page itself (so the recipient opens the same standalone invite) */
+    window._INVITE_SHARE_URL = location.href.split('?')[0].split('#')[0];
+  </script>
+  <script defer src="Scripts/the_upper_room.js"></script>
+
+  <script type="module" src="https://flock-os.github.io/FlockOS/New_Covenant/Scripts/the_gospel/the_gospel_invitation.js">
+  </script>
+  <script type="module">
+    import { mountUnityHeader } from 'https://flock-os.github.io/FlockOS/New_Covenant/Scripts/the_unity_header.js';
+    import { render, mount }    from 'https://flock-os.github.io/FlockOS/New_Covenant/Scripts/the_gospel/the_gospel_invitation.js';
+
+    /* ── Mount unity header (public — no user) ── */
+    const INV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4.5" y1="8.5" x2="19.5" y2="8.5"/></svg>';
+    const topbar = document.getElementById('inv-topbar');
+    if (topbar) {
+      mountUnityHeader(topbar, {
+        appId:       'invite',
+        appName:     'The Invitation',
+        appIconSvg:  INV_ICON,
+        appAccent:   '#22c55e',
+        appAccentDk: '#14532d',
+        homeHref:    'app.invite/',
+        user:        null,
+        signInHref:  './',
+        features: [
+          { id: 'inv-share',    label: 'Share This Page', hint: 'Send this invitation to someone', run: () => document.getElementById('inv-topbar-share')?.click() },
+          { id: 'inv-launcher', label: 'Back to Launcher', hint: 'All FlockOS apps',               run: () => { location.href = '../'; } },
+        ],
+      });
+    }
+
+    const root    = document.getElementById('inv-root');
+    const loading = document.getElementById('inv-loading');
+
+    /* Render invitation content */
+    root.innerHTML = render();
+    loading.remove();
+
+    /* Mount interactivity */
+    mount(root);
+
+    /* ── Topbar share pill ──────────────────────────────────────── */
+    document.getElementById('inv-topbar-share')?.addEventListener('click', () => {
+      const url = window._INVITE_SHARE_URL || location.href;
+      const msg = 'I thought you\u2019d appreciate this \u2014 a hope-filled look at Jesus Christ:';
+      if (navigator.share) {
+        navigator.share({ title: 'A Hope-Filled View of Jesus Christ', text: msg, url }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(url).catch(() => {});
+        window.location.href = `sms:?body=${encodeURIComponent(msg + '\n' + url)}`;
+      }
+    });
+
+    /* ── Church name in topbar ──────────────────────────────────── */
+    (async () => {
+      try {
+        const cfg = window.FLOCK_FIREBASE_CONFIG;
+        const fb  = window.firebase;
+        if (!fb || !cfg) return;
+        const appName = 'invite-church-info';
+        const app = fb.apps.find(a => a.name === appName) || fb.initializeApp(cfg, appName);
+        const db  = app.firestore();
+        const doc = await db.collection('appConfig').doc('church_name').get();
+        const name = doc.exists ? (doc.data().value || '').trim() : '';
+        if (name) document.getElementById('inv-church-name').textContent = name;
+      } catch (_) {}
+    })();
+
+    /* ── Service worker ─────────────────────────────────────────── */
+    if ('serviceWorker' in navigator) {
+      import('Scripts/the_living_water_register.js')
+        .then(m => m.register())
+        .catch(() => {});
+    }
+  </script>
+
+</body>
+</html>

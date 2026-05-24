@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>The Flock Herald — Trinity Baptist Church</title>
+  <link rel="icon" type="image/png" href="Images/FlockIcon.png">
+  <link rel="apple-touch-icon" href="Images/FlockIcon-512.webp">
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trinity Baptist Church">
+  <meta name="theme-color" content="#f5f0e8">
+  <meta name="description" content="The Flock Herald — Daily devotionals, missions, theology, apologetics, discipleship, and Scripture for the Body of Christ.">
+  <meta property="og:title" content="The Flock Herald — Trinity Baptist Church">
+  <meta property="og:description" content="Daily devotionals, missions reports, theology, apologetics, and Scripture — powered by FlockOS.">
+  <meta property="og:image" content="Images/FlockIcon-512.webp">
+  <meta property="og:type" content="website">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; height: 100dvh; overflow: hidden; background: #f5f0e8; }
+    #herald-frame {
+      display: block;
+      border: none;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+    }
+    /* ── PWA Update Banner ──────────────────────────────────────────── */
+    .update-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9990;
+      background: #1e2d6e; border-bottom: 1px solid rgba(91,141,238,0.35);
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; font-size: 0.82rem; color: #d0d9f8;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .update-banner[hidden] { display: none !important; }
+    .update-banner-text { flex: 1; font-weight: 500; }
+    .update-banner-refresh {
+      padding: 5px 13px; border-radius: 8px;
+      background: #3b82f6; color: #fff; border: none;
+      font: 600 0.8rem/1 system-ui; cursor: pointer; flex-shrink: 0;
+    }
+    .update-banner-refresh:disabled { opacity: 0.55; cursor: not-allowed; }
+    .update-banner-dismiss {
+      padding: 4px 6px; border: none; background: none;
+      color: rgba(255,255,255,0.6); cursor: pointer; font-size: 1.1rem; flex-shrink: 0; line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PWA Update Banner — shown when a new SW version is waiting -->
+  <div class="update-banner" id="updateBanner" hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+    <span class="update-banner-text">New edition available — update now for today's content</span>
+    <button class="update-banner-refresh" id="updateRefreshBtn" onclick="_doUpdate()">Update now</button>
+    <button class="update-banner-dismiss" aria-label="Dismiss" onclick="document.getElementById('updateBanner').hidden=true">&#10005;</button>
+  </div>
+
+  <!-- The Flock Herald — primary entry point, loaded from its own document -->
+  <iframe id="herald-frame"
+          src="app.flocknews/flocknews.html"
+          title="The Flock Herald"></iframe>
+
+  <script>
+  // ── PWA: SW registration + update detection + online reconnect ─────────
+  var _swReg = null;
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./the_living_water.js').then(function (reg) {
+      _swReg = reg;
+
+      // Already waiting — show update banner if a genuine update is available
+      if (reg.waiting && navigator.serviceWorker.controller) { _showUpdateBanner(); }
+
+      // New SW found while this page is open
+      reg.addEventListener('updatefound', function () {
+        var installing = reg.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', function () {
+          if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+            _showUpdateBanner();
+          }
+        });
+      });
+
+      // Kick off a background update check on every page load
+      reg.update().catch(function () {});
+    }).catch(function (err) { console.warn('[SW] registration failed', err); });
+
+    // When SW controller changes (new SW took over), reload the page
+    var _reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!_reloading) { _reloading = true; location.reload(); }
+    });
+  }
+
+  // Online reconnect — pastors coming online after offline session trigger update check
+  window.addEventListener('online', function () {
+    var reg = _swReg;
+    if (reg) { reg.update().catch(function () {}); }
+    else if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration('./').then(function (r) {
+        if (r) r.update().catch(function () {});
+      });
+    }
+  });
+
+  function _showUpdateBanner() {
+    document.getElementById('updateBanner').hidden = false;
+  }
+
+  async function _doUpdate() {
+    var btn = document.getElementById('updateRefreshBtn');
+    if (!navigator.onLine) {
+      var orig = btn ? btn.textContent : '';
+      if (btn) { btn.textContent = 'No internet — connect first'; btn.disabled = true; }
+      setTimeout(function () {
+        if (btn) { btn.textContent = orig || 'Update now'; btn.disabled = false; }
+      }, 3000);
+      return;
+    }
+    document.getElementById('updateBanner').hidden = true;
+    var reg = _swReg || (await navigator.serviceWorker.getRegistration('./'));
+    if (reg && reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      if (reg) { await reg.update().catch(function () {}); }
+      location.reload();
+    }
+  }
+  </script>
+
+</body>
+</html>
