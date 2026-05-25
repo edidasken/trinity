@@ -3,7 +3,7 @@
    "Iron sharpeneth iron; so a man sharpeneth the countenance of his friend." — Pr 27:17
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { messages, typing }   from '../../Scripts/the_upper_room/index.js';
+import { messages, typing }   from '../Scripts/the_upper_room/index.js';
 import { renderMessage }      from './the_message.js';
 import { renderComposer }     from './the_composer.js';
 

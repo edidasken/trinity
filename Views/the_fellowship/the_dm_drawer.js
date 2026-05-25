@@ -3,7 +3,7 @@
    "A friend loveth at all times." — Proverbs 17:17
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { dms } from '../../Scripts/the_upper_room/index.js';
+import { dms } from '../Scripts/the_upper_room/index.js';
 import { renderThread } from './the_thread.js';
 
 // Mobile breakpoint — below this, we show list OR thread, not both.

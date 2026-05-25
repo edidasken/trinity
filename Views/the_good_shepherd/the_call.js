@@ -3,7 +3,7 @@
    "Many are called, but few are chosen." — Matthew 22:14
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { whoAmI } from '../../Scripts/the_priesthood/index.js';
+import { whoAmI } from '../Scripts/the_priesthood/index.js';
 
 export async function renderCall(ctx) {
   await whoAmI(); // ensure auth state is resolved before rendering

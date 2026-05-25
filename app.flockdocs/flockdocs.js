@@ -14,8 +14,8 @@
      • Collaborative editing (future)
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { mountUnityHeader } from '../Scripts/the_unity_header.js';
-import { mountQuill }       from '../Scripts/the_quill.js';
+import { mountUnityHeader } from 'Scripts/the_unity_header.js';
+import { mountQuill }       from 'Scripts/the_quill.js';
 
 /* ── Constants ───────────────────────────────────────────────────────────── */
 const STORE_KEY_PREFS = 'fd_prefs';

@@ -3,7 +3,7 @@
    "There is one body, and one Spirit." — Ephesians 4:4
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { channels, unread, seeding } from '../../Scripts/the_upper_room/index.js';
+import { channels, unread, seeding } from '../Scripts/the_upper_room/index.js';
 import { renderThread } from './the_thread.js';
 
 export function renderChannelsPane(host /*, ctx */) {

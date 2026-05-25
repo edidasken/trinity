@@ -59,7 +59,7 @@ async function _load(root) {
   // Fallback to the static snapshot shipped in /Data/teaching_plans.js
   if (!bundle || !bundle.length) {
     try {
-      const mod = await import('../../Data/teaching_plans.js');
+      const mod = await import('../Data/teaching_plans.js');
       bundle = mod.default || [];
     } catch (e) {
       console.error('[gospel/teaching-plans] load static bundle failed:', e);

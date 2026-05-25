@@ -7,8 +7,8 @@
    and renders them as a compact list. Click a row → jump to Fellowship.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../../Scripts/the_manna.js';
-import { summary } from '../../Scripts/the_comms.js';
+import { draw, swr } from '../Scripts/the_manna.js';
+import { summary } from '../Scripts/the_comms.js';
 
 const KEY = 'shepherd:feed';
 const TTL = 5 * 60_000; // align with pre-warm TTL — boot value stays valid

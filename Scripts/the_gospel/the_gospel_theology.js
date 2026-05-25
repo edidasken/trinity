@@ -48,7 +48,7 @@ async function _load(root) {
 
   // Load from static bundle (regenerated from Firestore via export_theology_to_js.py)
   try {
-    const mod = await import('../../Data/theology.js');
+    const mod = await import('../Data/theology.js');
     _state.tree = _treeFromFlat(mod.default || []);
   } catch (e) {
     console.error('[gospel/theology] static bundle failed:', e);

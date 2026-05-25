@@ -5,9 +5,9 @@
 
 import { pageHero } from '../_frame.js';
 import { openContactComposer } from '../the_life/index.js';
-import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
-import { go } from '../../Scripts/the_scribes/index.js';
-import { dms } from '../../Scripts/the_upper_room/index.js';
+import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
+import { go } from '../Scripts/the_scribes/index.js';
+import { dms } from '../Scripts/the_upper_room/index.js';
 
 export const name  = 'the_fold';
 export const title = 'The Fold';

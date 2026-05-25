@@ -4,8 +4,8 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 import { esc, snip, emptyState, loadingCards, chip } from './the_gospel_shared.js';
-import GREEK from '../../Data/strongs-greek.js';
-import HEBREW from '../../Data/strongs-hebrew.js';
+import GREEK from '../Data/strongs-greek.js';
+import HEBREW from '../Data/strongs-hebrew.js';
 
 export const name        = 'the_gospel_lexicon';
 export const title       = 'Lexicon';

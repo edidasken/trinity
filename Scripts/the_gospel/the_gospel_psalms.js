@@ -123,7 +123,7 @@ export function mount(root) {
   qEl.addEventListener('input', () => { _q = qEl.value.trim(); _paint(); });
 
   // Load data bundle
-  import('../../Data/psalms.js').then(mod => {
+  import('../Data/psalms.js').then(mod => {
     _data = mod.default || {};
     _paint();
   }).catch(() => {

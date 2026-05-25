@@ -60,7 +60,7 @@ export function mount(root) {
 
 async function _load(root) {
   try {
-    const mod = await import('../../Data/books-of-the-bible.js');
+    const mod = await import('../Data/books-of-the-bible.js');
     _state.rows = (mod.default || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
   } catch (e) {
     console.error('[gospel/library] static bundle failed:', e);

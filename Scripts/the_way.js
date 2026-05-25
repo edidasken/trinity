@@ -1405,7 +1405,7 @@ const TheWay = (() => {
         if (liveQuiz && liveQuiz.length) {
           appQuiz = liveQuiz;
         } else {
-          var qmod = await import('../Data/quiz.js');
+          var qmod = await import('Data/quiz.js');
           appQuiz = qmod.default || [];
         }
       } catch (_) {}
@@ -1895,7 +1895,7 @@ const TheWay = (() => {
     // Load day-by-day schedule from static bundle
     var schedule = [];
     try {
-      var smod = await import('../Data/reading-plans.js');
+      var smod = await import('Data/reading-plans.js');
       var allSchedules = smod.default || {};
       schedule = allSchedules[planId] || [];
     } catch (_) {}
@@ -1982,7 +1982,7 @@ const TheWay = (() => {
       try {
         if (typeof TheTruth !== 'undefined') _theoBundleFlat = TheTruth.liveBundle('theology');
         if (!_theoBundleFlat || !_theoBundleFlat.length) {
-          var _theoMod = await import('../Data/theology.js');
+          var _theoMod = await import('Data/theology.js');
           if ((_theoMod.default || []).length) _theoBundleFlat = _theoMod.default;
         }
         if (_theoBundleFlat && !_theoBundleFlat.length) _theoBundleFlat = null;
@@ -2263,8 +2263,8 @@ const TheWay = (() => {
       // 3. Fall back to Strong's concordance static data
       if (!words.length) {
         try {
-          var gMod = await import('../Data/strongs-greek.js');
-          var hMod = await import('../Data/strongs-hebrew.js');
+          var gMod = await import('Data/strongs-greek.js');
+          var hMod = await import('Data/strongs-hebrew.js');
           var GREEK = gMod.default || {};
           var HEBREW = hMod.default || {};
           for (var gid in GREEK) {
@@ -2782,7 +2782,7 @@ const TheWay = (() => {
       if (live) {
         devos = live;
       } else {
-        var mod  = await import('../Data/devotionals.js');
+        var mod  = await import('Data/devotionals.js');
         devos = mod.default || [];
       }
 
@@ -2850,7 +2850,7 @@ const TheWay = (() => {
     try {
       // Load from local static bundle — re-export with:
       //   python "Architechtural Docs/New Covenant/Automation/Shepherds/export_apologetics_to_js.py"
-      var mod  = await import('../Data/apologetics.js');
+      var mod  = await import('Data/apologetics.js');
       var data = mod.default || [];
 
       if (!data.length) {
@@ -2928,7 +2928,7 @@ const TheWay = (() => {
   async function _renderPsalms() {
     _panel(_spinner());
     try {
-      var mod  = await import('../Data/psalms.js');
+      var mod  = await import('Data/psalms.js');
       var data = mod.default || {};
       var byNumber = data.byNumber || [];
       var byTheme  = data.byTheme  || [];
@@ -3070,7 +3070,7 @@ const TheWay = (() => {
       if (live && live.length) {
         allDocs = live;
       } else {
-        var mod  = await import('../Data/counseling.js');
+        var mod  = await import('Data/counseling.js');
         allDocs = mod.default || [];
       }
 
@@ -3367,7 +3367,7 @@ const TheWay = (() => {
       // Static snapshot bundled at deploy time
       if (!rows.length) {
         try {
-          var _gMod = await import('../Data/genealogy.js');
+          var _gMod = await import('Data/genealogy.js');
           var _gStatic = (_gMod.default || []).filter(function(r) { return r.name || r['Name']; });
           if (_gStatic.length) rows = _gStatic.map(_normalizeGeneRow);
         } catch (_) {}

@@ -8,10 +8,10 @@
    somewhere meaningful, never a dead "All caught up".
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../../Scripts/the_manna.js';
-import { unreadTotal } from '../../Scripts/the_upper_room/index.js';
-import { pendingCount } from '../../Scripts/the_life/index.js';
-import { todayCount }   from '../../Scripts/the_seasons/index.js';
+import { draw, swr } from '../Scripts/the_manna.js';
+import { unreadTotal } from '../Scripts/the_upper_room/index.js';
+import { pendingCount } from '../Scripts/the_life/index.js';
+import { todayCount }   from '../Scripts/the_seasons/index.js';
 
 const COPY = {
   fellowship: {

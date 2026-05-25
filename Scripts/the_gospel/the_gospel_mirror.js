@@ -44,7 +44,7 @@ async function _load(root) {
   /* No backend available — try static bundle before showing offline state. */
   if (!U && !V) {
     try {
-      const mod = await import('../../Data/mirror.js');
+      const mod = await import('../Data/mirror.js');
       _state.rows = mod.default || [];
     } catch (e) {
       console.error('[gospel/mirror] static bundle failed:', e);

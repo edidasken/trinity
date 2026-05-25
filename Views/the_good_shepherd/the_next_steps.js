@@ -6,10 +6,10 @@
    three rows on the home page with a one-click jump to that person.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../../Scripts/the_manna.js';
-import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
-import { careCases, compassionList } from '../../Scripts/the_life/index.js';
-import { read, write } from '../../Scripts/the_cistern.js';
+import { draw, swr } from '../Scripts/the_manna.js';
+import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
+import { careCases, compassionList } from '../Scripts/the_life/index.js';
+import { read, write } from '../Scripts/the_cistern.js';
 
 const KEY = 'shepherd:next';
 const TTL = 5 * 60_000; // align with pre-warm; UR cache key keeps consistency

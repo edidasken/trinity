@@ -60,7 +60,7 @@ export function mount(root) {
 async function _load(root) {
   const view = root.querySelector('[data-bind="root"]');
   try {
-    const mod = await import('../../Data/devotionals.js');
+    const mod = await import('../Data/devotionals.js');
     // Sort by date descending so most-recent is first
     _state.rows = (mod.default || []).slice().sort((a, b) => {
       const da = a.date || a.Date || '';

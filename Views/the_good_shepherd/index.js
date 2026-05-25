@@ -20,7 +20,7 @@ import { mountMyTodos }     from './the_todos.js';
 import { mountTodayEvents } from './the_today_events.js';
 import { mountTodayWord }     from './the_word.js';
 import { mountPrayerHours }  from './the_prayer_hours.js';
-import { profile }          from '../../Scripts/the_priesthood/index.js';
+import { profile }          from '../Scripts/the_priesthood/index.js';
 
 export const name  = 'the_good_shepherd';
 export const title = 'The Good Shepherd';
@@ -90,9 +90,9 @@ export function render(/* params */) {
 
 export function mount(root, ctx) {
   // Lazy-load vessels we use on this page.
-  import('../../Scripts/vessels/the_chalice.js').catch(() => {});
-  import('../../Scripts/vessels/the_mantle.js').catch(() => {});
-  import('../../Scripts/vessels/the_seal.js').catch(() => {});
+  import('../Scripts/vessels/the_chalice.js').catch(() => {});
+  import('../Scripts/vessels/the_mantle.js').catch(() => {});
+  import('../Scripts/vessels/the_seal.js').catch(() => {});
 
   // Click stat cards to jump.
   root.querySelectorAll('[data-bind][data-jump]').forEach((card) => {

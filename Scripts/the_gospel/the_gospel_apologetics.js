@@ -43,7 +43,7 @@ export function mount(root) {
 
 async function _load(root) {
   try {
-    const mod = await import('../../Data/apologetics.js');
+    const mod = await import('../Data/apologetics.js');
     // Sort by sortOrder ascending — this is the canonical 1–N sequence
     _state.rows = (mod.default || []).slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   } catch (e) {

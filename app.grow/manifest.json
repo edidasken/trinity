@@ -17,25 +17,25 @@
   ],
   "icons": [
     {
-      "src": "../Images/icon-grow.svg",
+      "src": "Images/icon-grow.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "../Images/icon-grow.svg",
+      "src": "Images/icon-grow.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
     },
     {
-      "src": "../Images/icon-grow.svg",
+      "src": "Images/icon-grow.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "../Images/FlockIcon-512.webp",
+      "src": "Images/FlockIcon-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any"
@@ -49,7 +49,7 @@
       "url": "./app.grow.html#the_gospel_reading",
       "icons": [
         {
-          "src": "../Images/icon-grow.svg",
+          "src": "Images/icon-grow.svg",
           "sizes": "any"
         }
       ]
@@ -61,7 +61,7 @@
       "url": "./app.grow.html#the_gospel_devotionals",
       "icons": [
         {
-          "src": "../Images/icon-grow.svg",
+          "src": "Images/icon-grow.svg",
           "sizes": "any"
         }
       ]
@@ -73,7 +73,7 @@
       "url": "./app.grow.html#the_gospel_lexicon",
       "icons": [
         {
-          "src": "../Images/icon-grow.svg",
+          "src": "Images/icon-grow.svg",
           "sizes": "any"
         }
       ]

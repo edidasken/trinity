@@ -7,7 +7,7 @@
    sorted by how soon. Click → jump to the_fold for that person.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../../Scripts/the_manna.js';
+import { draw, swr } from '../Scripts/the_manna.js';
 
 const TTL = 30 * 60_000; // birthdays change rarely → cache 30 min
 const KEY = 'shepherd:birthdays';

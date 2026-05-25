@@ -134,7 +134,7 @@ export function mount(root) {
 async function _load(root) {
   const view = root.querySelector('[data-bind="root"]');
   try {
-    const mod = await import('../../Data/missions.js');
+    const mod = await import('../Data/missions.js');
     _state.nations = (mod.default || [])
       .slice()
       .sort((a, b) => (a.countryName || '').localeCompare(b.countryName || ''));

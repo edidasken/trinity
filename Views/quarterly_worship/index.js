@@ -6,7 +6,7 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 import { pageHero } from '../_frame.js';
-import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
+import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
 
 export const name  = 'quarterly_worship';
 export const title = 'Quarterly Worship';

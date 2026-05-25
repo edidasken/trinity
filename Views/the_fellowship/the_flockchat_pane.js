@@ -7,7 +7,7 @@
    We embed it here so the user never leaves FlockOS to use it.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { flockchat } from '../../Scripts/the_comms.js';
+import { flockchat } from '../Scripts/the_comms.js';
 
 export function renderFlockchatPane(host /*, ctx */) {
   if (!host) return () => {};

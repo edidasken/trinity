@@ -60,7 +60,7 @@ export async function mount(root) {
   // Load one-year-bible bundle once
   if (!_oyb.length) {
     try {
-      const mod = await import('../../Data/one_year_bible.js');
+      const mod = await import('../Data/one_year_bible.js');
       _oyb = mod.default || [];
     } catch (e) {
       console.error('[gospel/reading] one_year_bible bundle failed:', e);

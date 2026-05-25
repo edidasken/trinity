@@ -3,7 +3,7 @@
    "Let your speech be alway with grace, seasoned with salt." — Colossians 4:6
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { render as renderMentions } from '../../Scripts/the_upper_room/the_mentions.js';
+import { render as renderMentions } from '../Scripts/the_upper_room/the_mentions.js';
 
 export function renderMessage(m) {
   if (!m) return '';

@@ -10,8 +10,8 @@
    or before yesterday — for quick re-reading.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../../Scripts/the_manna.js';
-import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
+import { draw, swr } from '../Scripts/the_manna.js';
+import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
 const TTL = 30 * 60_000; // 30 min — devotionals change once a day
 const KEY = 'upperRoom:devotionals';
 
@@ -87,7 +87,7 @@ export function mountDevotional(host, ctx) {
 async function _fetch() {
   // 1. Static bundle (regenerated from Firestore via export_devotionals_to_js.py).
   try {
-    const mod = await import('../../Data/devotionals.js');
+    const mod = await import('../Data/devotionals.js');
     const rows = mod.default || [];
     if (Array.isArray(rows) && rows.length) return rows;
   } catch (_) { /* fall through */ }

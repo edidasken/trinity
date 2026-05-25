@@ -2395,7 +2395,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
             </div>
             <p>No devotionals found for the past 7 days.</p>
-            <a class="fc-sct-grow-link" href="../app.grow/app.grow.html">Open GROW \u2192</a>
+            <a class="fc-sct-grow-link" href="app.grow/app.grow.html">Open GROW \u2192</a>
           </div>
         </div>`;
       return;
@@ -2454,7 +2454,7 @@
       <div class="fc-sct-section fc-sct-word-feed">
         ${matched.map(_wordBubble).join('')}
         <div class="fc-sct-word-footer">
-          <a class="fc-sct-grow-link" href="../app.grow/app.grow.html">Open in GROW \u2192</a>
+          <a class="fc-sct-grow-link" href="app.grow/app.grow.html">Open in GROW \u2192</a>
         </div>
       </div>`;
 
@@ -2496,7 +2496,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
             </div>
             <p>No reading plan found for the past 7 days.</p>
-            <a class="fc-sct-grow-link" href="../app.grow/app.grow.html">Open GROW \u2192</a>
+            <a class="fc-sct-grow-link" href="app.grow/app.grow.html">Open GROW \u2192</a>
           </div>
         </div>`;
       return;
@@ -2555,7 +2555,7 @@
       <div class="fc-sct-section fc-sct-word-feed">
         ${matched.map(_readBubble).join('')}
         <div class="fc-sct-word-footer">
-          <a class="fc-sct-grow-link" href="../app.grow/app.grow.html">Open in GROW \u2192</a>
+          <a class="fc-sct-grow-link" href="app.grow/app.grow.html">Open in GROW \u2192</a>
         </div>
       </div>`;
 
@@ -3891,7 +3891,7 @@
             <h4>Announcements</h4>
             <div class="fc-flocknews-content">${announce.substring(0, 150)}${announce.length > 150 ? '...' : ''}</div>
           </div>` : ''}
-          <a href="../app.flocknews/app.flocknews.html#${news.dateKey}" target="_blank" class="fc-flocknews-link">
+          <a href="app.flocknews/app.flocknews.html#${news.dateKey}" target="_blank" class="fc-flocknews-link">
             View Full Day ↗
           </a>
         </div>`;

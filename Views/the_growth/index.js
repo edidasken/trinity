@@ -4,23 +4,23 @@
    "But grow in the grace and knowledge of our Lord and Savior Jesus Christ." — 2 Peter 3:18
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import * as Courses      from '../../Scripts/the_gospel/the_gospel_courses.js';
-import * as Quizzes      from '../../Scripts/the_gospel/the_gospel_quizzes.js';
-import * as Reading      from '../../Scripts/the_gospel/the_gospel_reading.js';
-import * as Theology      from '../../Scripts/the_gospel/the_gospel_theology.js';
-import * as TeachingPlans from '../../Scripts/the_gospel/the_gospel_teaching_plans.js';
-import * as Lexicon       from '../../Scripts/the_gospel/the_gospel_lexicon.js';
-import * as Library      from '../../Scripts/the_gospel/the_gospel_library.js';
-import * as Devotionals  from '../../Scripts/the_gospel/the_gospel_devotionals.js';
-import * as Apologetics  from '../../Scripts/the_gospel/the_gospel_apologetics.js';
-import * as Counseling   from '../../Scripts/the_gospel/the_gospel_counseling.js';
-import * as Sermons      from '../../Scripts/the_gospel/the_gospel_sermons.js';
-import * as Heart        from '../../Scripts/the_gospel/the_gospel_heart.js';
-import * as Mirror       from '../../Scripts/the_gospel/the_gospel_mirror.js';
-import * as Genealogy    from '../../Scripts/the_gospel/the_gospel_genealogy.js';
-import * as Journal      from '../../Scripts/the_gospel/the_gospel_journal.js';
-import * as Certificates from '../../Scripts/the_gospel/the_gospel_certificates.js';
-import * as Analytics    from '../../Scripts/the_gospel/the_gospel_analytics.js';
+import * as Courses      from '../Scripts/the_gospel/the_gospel_courses.js';
+import * as Quizzes      from '../Scripts/the_gospel/the_gospel_quizzes.js';
+import * as Reading      from '../Scripts/the_gospel/the_gospel_reading.js';
+import * as Theology      from '../Scripts/the_gospel/the_gospel_theology.js';
+import * as TeachingPlans from '../Scripts/the_gospel/the_gospel_teaching_plans.js';
+import * as Lexicon       from '../Scripts/the_gospel/the_gospel_lexicon.js';
+import * as Library      from '../Scripts/the_gospel/the_gospel_library.js';
+import * as Devotionals  from '../Scripts/the_gospel/the_gospel_devotionals.js';
+import * as Apologetics  from '../Scripts/the_gospel/the_gospel_apologetics.js';
+import * as Counseling   from '../Scripts/the_gospel/the_gospel_counseling.js';
+import * as Sermons      from '../Scripts/the_gospel/the_gospel_sermons.js';
+import * as Heart        from '../Scripts/the_gospel/the_gospel_heart.js';
+import * as Mirror       from '../Scripts/the_gospel/the_gospel_mirror.js';
+import * as Genealogy    from '../Scripts/the_gospel/the_gospel_genealogy.js';
+import * as Journal      from '../Scripts/the_gospel/the_gospel_journal.js';
+import * as Certificates from '../Scripts/the_gospel/the_gospel_certificates.js';
+import * as Analytics    from '../Scripts/the_gospel/the_gospel_analytics.js';
 
 export const name  = 'the_growth';
 export const title = 'Grow';

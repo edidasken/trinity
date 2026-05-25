@@ -6,7 +6,7 @@
    the import path exists; not mounted by default in Phase I.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { presence, dms } from '../../Scripts/the_upper_room/index.js';
+import { presence, dms } from '../Scripts/the_upper_room/index.js';
 
 export function renderMemberPane(host, { members = [] } = {}) {
   if (!host) return () => {};

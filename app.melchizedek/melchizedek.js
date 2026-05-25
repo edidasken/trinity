@@ -121,7 +121,7 @@ function _wireHeader(profile) {
   const host = document.getElementById('melch-topbar');
   if (!host) return;
 
-  import('../Scripts/the_unity_header.js').then(({ mountUnityHeader }) => {
+  import('Scripts/the_unity_header.js').then(({ mountUnityHeader }) => {
     const ctrl = mountUnityHeader(host, {
       appId:       'melchizedek',
       appName:     'Melchizedek',
