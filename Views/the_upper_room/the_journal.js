@@ -7,7 +7,7 @@
    via UpperRoom.listJournal / createJournal / updateJournal / deleteJournal).
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr, invalidate } from '../Scripts/the_manna.js';
+import { draw, swr, invalidate } from '../../Scripts/the_manna.js';
 
 const KEY = 'upperRoom:journal';
 const TTL = 60_000; // 1 min — refresh after writes

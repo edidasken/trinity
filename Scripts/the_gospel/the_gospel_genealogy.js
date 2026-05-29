@@ -51,7 +51,7 @@ async function _load(root) {
   const list = root.querySelector('[data-bind="list"]');
   // Load from static bundle (regenerated from Firestore via export_genealogy_to_js.py)
   try {
-    const mod = await import('../Data/genealogy.js');
+    const mod = await import('../../Data/genealogy.js');
     _state.rows = mod.default || [];
     _paint(root);
   } catch (e) {

@@ -48,7 +48,7 @@ async function _load(root) {
   // Load bible quiz questions from static bundle (regenerated via export_quiz_to_js.py)
   // Course/structured quizzes are user-created content — not yet bundled
   try {
-    const mod = await import('../Data/quiz.js');
+    const mod = await import('../../Data/quiz.js');
     _state.bible  = mod.default || [];
     _state.course = [];
   } catch (e) {

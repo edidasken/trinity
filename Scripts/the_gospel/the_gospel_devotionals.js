@@ -27,7 +27,7 @@ function _dayOfYear(iso) {
   try {
     const d = new Date(iso + 'T12:00:00');
     const start = new Date(d.getFullYear(), 0, 1);
-    return Math.floor((d - start) / 86400000) + 1;
+    return Math.floor((d.getTime() - start.getTime()) / 86400000) + 1;
   } catch { return 0; }
 }
 
@@ -60,7 +60,7 @@ export function mount(root) {
 async function _load(root) {
   const view = root.querySelector('[data-bind="root"]');
   try {
-    const mod = await import('../Data/devotionals.js');
+    const mod = await import('../../Data/devotionals.js');
     // Sort by date descending so most-recent is first
     _state.rows = (mod.default || []).slice().sort((a, b) => {
       const da = a.date || a.Date || '';
@@ -179,4 +179,3 @@ function _feedCard(d) {
     </div>
   `;
 }
-

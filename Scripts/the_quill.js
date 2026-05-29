@@ -7,7 +7,7 @@
    text-editing surface in FlockOS.
 
    Usage:
-     import { mountQuill } from 'Scripts/the_quill.js';
+     import { mountQuill } from '../Scripts/the_quill.js';
      const q = mountQuill(editorEl, {
        mode:       'document',  // 'document' (FlockDocs) | 'note' (Shamar)
        pageEl:     null,        // the .fd-editor-page element (document mode)

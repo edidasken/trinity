@@ -8,7 +8,7 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 import { pageHero, ensureVessels } from '../_frame.js';
-import { messages } from '../Scripts/the_upper_room/index.js';
+import { messages } from '../../Scripts/the_upper_room/index.js';
 import { renderMessage } from '../the_fellowship/the_message.js';
 
 export const name  = 'the_announcements';

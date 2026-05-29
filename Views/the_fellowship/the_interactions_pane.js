@@ -8,7 +8,7 @@
    the live Firebase chat.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import * as scrolls from '../Scripts/the_scrolls/index.js';
+import * as scrolls from '../../Scripts/the_scrolls/index.js';
 
 export function renderInteractionsPane(host /*, ctx */) {
   if (!host) return () => {};

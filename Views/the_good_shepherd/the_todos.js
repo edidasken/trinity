@@ -7,7 +7,7 @@
    view if registered, otherwise stays on home (placeholder).
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../Scripts/the_manna.js';
+import { draw, swr } from '../../Scripts/the_manna.js';
 
 const TTL = 60_000; // todos change frequently → 1 min cache
 const KEY = 'shepherd:mytodos';

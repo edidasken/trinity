@@ -16,7 +16,7 @@
    ════════════════════════════════════════════════════════════════════════════ */
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-import { mountUnityHeader } from 'Scripts/the_unity_header.js';
+import { mountUnityHeader } from '../Scripts/the_unity_header.js';
 
 const FS_KEY = 'flockshow_shows_v1';
 

@@ -37,7 +37,7 @@ export function placeholder({ title = 'Coming soon', body = '', action } = {}) {
 
 export function ensureVessels(...names) {
   for (const n of names) {
-    import(`Scripts/vessels/${n}.js`).catch(() => {});
+    import(`../Scripts/vessels/${n}.js`).catch(() => {});
   }
 }
 

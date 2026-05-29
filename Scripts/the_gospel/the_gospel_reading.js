@@ -60,7 +60,7 @@ export async function mount(root) {
   // Load one-year-bible bundle once
   if (!_oyb.length) {
     try {
-      const mod = await import('../Data/one_year_bible.js');
+      const mod = await import('../../Data/one_year_bible.js');
       _oyb = mod.default || [];
     } catch (e) {
       console.error('[gospel/reading] one_year_bible bundle failed:', e);
@@ -114,7 +114,7 @@ export async function mount(root) {
 function _todayDayNumber() {
   const now  = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
-  return Math.floor((now - start) / 86400000) + 1; // 1-based day of year
+  return Math.floor((now.getTime() - start.getTime()) / 86400000) + 1; // 1-based day of year
 }
 
 function _paintOYB(root) {

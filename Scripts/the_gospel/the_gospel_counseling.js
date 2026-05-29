@@ -99,7 +99,7 @@ async function _load(root) {
   // Load from static bundle (regenerated from Firestore via export_counseling_to_js.py)
   _stubs = [];
   try {
-    const mod = await import('../Data/counseling.js');
+    const mod = await import('../../Data/counseling.js');
     const arr = mod.default || [];
     arr.forEach((d) => {
       const id = d._id || d.id || d.topicId;

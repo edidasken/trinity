@@ -11,7 +11,7 @@
    delegates sign-out to the app-supplied handler.
 
    USAGE (any app):
-     import { mountUnityHeader } from 'Scripts/the_unity_header.js';
+     import { mountUnityHeader } from '../Scripts/the_unity_header.js';
      mountUnityHeader(headerEl, {
        appId:       'flockchat',
        appName:     'FlockChat',

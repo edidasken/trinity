@@ -4,7 +4,7 @@
     blessed God." — 1 Timothy 1:10-11
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { esc, snip, emptyState, loadingCards, sectionHead, mdInline, stripHtml } from './the_gospel_shared.js';
+import { esc, snip, emptyState, loadingCards, sectionHead, mdInline, stripHtml, rows } from './the_gospel_shared.js';
 
 export const name        = 'the_gospel_theology';
 export const title       = 'Theology';
@@ -48,7 +48,7 @@ async function _load(root) {
 
   // Load from static bundle (regenerated from Firestore via export_theology_to_js.py)
   try {
-    const mod = await import('../Data/theology.js');
+    const mod = await import('../../Data/theology.js');
     _state.tree = _treeFromFlat(mod.default || []);
   } catch (e) {
     console.error('[gospel/theology] static bundle failed:', e);

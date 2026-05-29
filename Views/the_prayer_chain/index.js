@@ -9,11 +9,11 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 import { pageHero } from '../_frame.js';
-import { messages } from '../Scripts/the_upper_room/index.js';
-import * as life     from '../Scripts/the_life/index.js';
+import { messages } from '../../Scripts/the_upper_room/index.js';
+import * as life     from '../../Scripts/the_life/index.js';
 import { renderMessage }  from '../the_fellowship/the_message.js';
 import { renderComposer } from '../the_fellowship/the_composer.js';
-import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
+import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
 
 export const name  = 'the_prayer_chain';
 export const title = 'Prayer Chain';

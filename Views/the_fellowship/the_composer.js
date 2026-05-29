@@ -3,8 +3,8 @@
    "Death and life are in the power of the tongue." — Proverbs 18:21
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { messages, typing, attachments, emoji } from '../Scripts/the_upper_room/index.js';
-import { raiseToast } from '../Scripts/vessels/the_staff.js';
+import { messages, typing, attachments, emoji } from '../../Scripts/the_upper_room/index.js';
+import { raiseToast } from '../../Scripts/vessels/the_staff.js';
 
 export function renderComposer(host, { channelId }) {
   if (!host || !channelId) return () => {};

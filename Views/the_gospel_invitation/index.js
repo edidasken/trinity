@@ -4,4 +4,4 @@
    the same content, data, and interactive components.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-export { render, mount, name, title } from '../Scripts/the_gospel/the_gospel_invitation.js';
+export { render, mount, name, title } from '../../Scripts/the_gospel/the_gospel_invitation.js';

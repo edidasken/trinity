@@ -4,9 +4,9 @@
    ══════════════════════════════════════════════════════════════════════════════ */
 
 import { pageHero } from '../_frame.js';
-import { profile } from '../Scripts/the_priesthood/index.js';
-import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
-import { getWarmCareRows, subscribeOpenCareRows, setOpenCareCount } from '../Scripts/the_life/index.js';
+import { profile } from '../../Scripts/the_priesthood/index.js';
+import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
+import { getWarmCareRows, subscribeOpenCareRows, setOpenCareCount } from '../../Scripts/the_life/index.js';
 
 export const name  = 'the_life';
 export const title = 'Pastoral Care';

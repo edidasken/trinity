@@ -5,8 +5,8 @@
  * A Google Keep-style note-taking app for FlockOS
  */
 
-import { mountUnityHeader } from 'Scripts/the_unity_header.js';
-import { mountQuill }       from 'Scripts/the_quill.js';
+import { mountUnityHeader } from '../Scripts/the_unity_header.js';
+import { mountQuill }       from '../Scripts/the_quill.js';
 
 (function() {
   'use strict';

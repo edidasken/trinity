@@ -7,7 +7,7 @@
    shows up to 4 with start time and location. Click → jump to the_seasons.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../Scripts/the_manna.js';
+import { draw, swr } from '../../Scripts/the_manna.js';
 
 const TTL = 5 * 60_000; // 5 min cache — events change occasionally
 const KEY = 'shepherd:today-events';

@@ -8,8 +8,8 @@
    key as the_devotional.js so they share fetched data.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-import { draw, swr } from '../Scripts/the_manna.js';
-import { buildAdapter } from '../Scripts/the_living_water_adapter.js';
+import { draw, swr } from '../../Scripts/the_manna.js';
+import { buildAdapter } from '../../Scripts/the_living_water_adapter.js';
 const TTL = 30 * 60_000;
 const KEY = 'upperRoom:devotionals'; // shared cache key with the_devotional.js
 
@@ -95,7 +95,7 @@ async function _fetch() {
   // 1. Static bundle (regenerated from Firestore via export_devotionals_to_js.py).
   //    Source of truth for public-facing widgets — no live network required.
   try {
-    const mod = await import('../Data/devotionals.js');
+    const mod = await import('../../Data/devotionals.js');
     const rows = mod.default || [];
     if (Array.isArray(rows) && rows.length) return rows;
   } catch (_) { /* fall through */ }

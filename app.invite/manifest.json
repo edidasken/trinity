@@ -17,25 +17,25 @@
   ],
   "icons": [
     {
-      "src": "Images/icon-invite.svg",
+      "src": "../Images/icon-invite.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "Images/icon-invite.svg",
+      "src": "../Images/icon-invite.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
     },
     {
-      "src": "Images/icon-invite.svg",
+      "src": "../Images/icon-invite.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "Images/FlockIcon-512.webp",
+      "src": "../Images/FlockIcon-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any"
